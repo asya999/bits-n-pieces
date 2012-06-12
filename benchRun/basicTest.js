@@ -12,11 +12,11 @@ print ("Database: " + db);
 print ("Collection: " + t.getFullName());
 dbv = db.serverBuildInfo();
 print("DB Version: "+dbv.version);
-print("Shell version: "+version_.x);
 ops = []
 // this is a hack because I can't find a way to get the "real" shell version
 // from the script and some benchRun functionality was added in 2.1.x
 sversion = version_;
+print("Shell version: "+version_.x);
 if (version_.x > 4296000000) {
    print ("Doing benchRun inserts")
    ops.push({ op : "insert" , ns : t.getFullName() , doc : { "name" : "Asya"} });
