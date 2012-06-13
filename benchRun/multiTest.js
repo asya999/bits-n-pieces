@@ -1,12 +1,13 @@
 load("utils.js");
 
-var offset =  0;
+var offset =  10000;
 var numDocs =  10000;
 
 // This assumes you have a single "example" doc in oneDoc collection
 // which will be read and inserted numDocs times (starting at _id offset
 // Other ways to populate data: d = {"foo":"bar"} - literal document inclusion
-var d = db.oneDoc.findOne();
+//var d = db.oneDoc.findOne();
+var d = {"foo":"bar"};
 var t = db.docsout;
 
 // optionally you could drop the collection first 
