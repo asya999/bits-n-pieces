@@ -12,33 +12,37 @@ print ("Database: " + db);
 print ("Collection: " + t.getFullName());
 dbv = db.serverBuildInfo();
 print("DB Version: "+dbv.version);
-ops = []
+opi = []
+ops1 = []
+ops2 = []
 // this is a hack because I can't find a way to get the "real" shell version
 // from the script and some benchRun functionality was added in 2.1.x
 sversion = version_;
 print("Shell version: "+version_.x);
 if (version_.x > 4296000000) {
    print ("Doing benchRun inserts")
-   ops.push({ op : "insert" , ns : t.getFullName() , doc : { "name" : "Asya"} });
+   opi.push({ op : "insert" , ns : t.getFullName() , doc : { "name" : "Asya"} });
 } else {
    print ("Doing manual insert")
    for (i=0; i<100; i++) { t.insert({"name":"Asya"}); }
 }
 
-// won't find anything since we used ObjectIds for _id
-ops.push({ op : "findOne" , ns : "test.foo" , query : { _id : 1 } });
+// won't find anything if we used ObjectIds for _id
+ops1.push({ op : "findOne" , ns : "test.foo" , query : { _id : 1 } });
 
 // will update one doc at a time since "multi" is not set
-ops.push({ op : "update" , ns : "test.foo" , query : { "name": "Asya"}, update : { $inc : {x:1} }});
-
-res =  benchRun( { parallel : 2, seconds: .1, ops : ops } )
+ops2.push({ op : "update" , ns : "test.foo" , query : { "name": "Asya"}, update : { $inc : {x:1} }});
 
 if (version_.x > 4296000000) {
-    print("Inserts per second: ", res.insert/1000);
+    res =  benchRun( { parallel : 2, seconds: 1, ops : opi } )
+    print("Inserts per second: ", res.insert);
 }
 
-print("Queries per second: ", res.query/1000);
-print("Updates per second: ", res.update/1000);
+res =  benchRun( { parallel : 2, seconds: 1, ops : ops1 } )
+print("Queries per second: ", res.query);
+
+res =  benchRun( { parallel : 2, seconds: 1, ops : ops2 } )
+print("Updates per second: ", res.update);
 
 // clean up after ourselves
 t.drop();
