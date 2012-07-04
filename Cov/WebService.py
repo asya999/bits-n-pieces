@@ -1,5 +1,6 @@
-# author Asya Kamsky (asya@coverity.com)
+# author Asya Kamsky (asya@kamsky.org)
 # date Jan 31, 2012
+# updated for 6.0 / v5 July 4th, 2012
 # This script requires suds that provides SOAP bindings for python.
 # Download suds from https://fedorahosted.org/suds/
 # unpack it and then run:
@@ -18,7 +19,7 @@ import logging.handlers
 # -----------------------------------------------------------------------------
 # Base class for all the web service clients
 class WebServiceClient:
-    def __init__(self, webservice_type, host, port, user, password, secure=False, version='v4'):
+    def __init__(self, webservice_type, host, port, user, password, secure=False, version='v5'):
         if secure==True:
             self.url = 'https://' + host + ':' + port
         else:

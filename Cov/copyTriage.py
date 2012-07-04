@@ -2,7 +2,7 @@
 #
 # Copy triage information from all or some defects in stream1 to stream2.
 #
-# author: Asya Kamsky (asya@coverity.com)
+# author: Asya Kamsky (asya@kamsky.org)
 # general approach: query source stream for all or all untriaged CIDs
 # This script requires suds that provides SOAP bindings for python.
 #

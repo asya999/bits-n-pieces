@@ -38,7 +38,7 @@ def main():
        <html><pre>
           Dear %s,
           \n
-          An account has been created for you at 10gen Coverity Trial Instance.
+          An account has been created for you at 10gen Coverity Instance.
           Your username is %s
           You have been added to %s group
           Please go to %s

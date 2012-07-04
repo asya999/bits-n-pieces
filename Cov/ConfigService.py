@@ -36,7 +36,7 @@ class ConfigServiceClient(WebServiceClient):
         return self.get_checker_prop(checker, subcat, domain, 'categoryDescription')
 
     def get_checker_category(self, checker, subcat, domain):
-        return self.get_checker_prop(checker, subcat, domain, 'coverityCategory')
+        return self.get_checker_prop(checker, subcat, domain, 'category')
 
     def get_checker_CWE(self, checker, subcat, domain):
         return self.get_checker_prop(checker, subcat, domain, 'cweCategory')
@@ -651,3 +651,36 @@ class ConfigServiceClient(WebServiceClient):
             if re.search(cpr.pathPattern, filepath):
                 return cm.componentMapId.name + '.' + cpr.componentId.name.split('.')[-1]
         return cm.componentMapId.name + '.' + 'Other'
+
+    def new_commits(self, action="check"):
+        commSDO = self.client.service.getCommitState()
+        logging.debug(commSDO)
+        if action == "check":
+            print "Server is ", 
+            if not commSDO.isAcceptingNewCommits: 
+                print "not",
+            print "accepting new Commits"
+            print commSDO.currentCommitCount, "commits in progress or queued"
+        elif action == "start":
+            if commSDO.isAcceptingNewCommits: 
+                logging.warning("Server is already accepting new commits")
+            else:
+                self.client.service.setAcceptingNewCommits(True);
+        elif action == "stop-now":
+            if commSDO.isAcceptingNewCommits: 
+                self.client.service.setAcceptingNewCommits(False);
+            else:
+                logging.warning("Server is already not accepting new commits")
+        elif action == "stop":
+            cSDO = self.client.service.getCommitState()
+            if cSDO.isAcceptingNewCommits: 
+                self.client.service.setAcceptingNewCommits(False);
+                while cSDO.currentCommitCount > 0:
+                    print "Waiting for %d commits to finish..." % (cSDO.currentCommitCount)
+                    sleep(15)
+                    cSDO = self.client.service.getCommitState()
+            else:
+                logging.warning("Server is already not accepting new commits")
+        else:
+            logging.error("Unknown commit state " + action)
+
