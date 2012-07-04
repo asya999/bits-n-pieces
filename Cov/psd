@@ -1,0 +1,21 @@
+#!/cygdrive/c/Python26/python
+
+import sys
+
+if len(sys.argv) < 2:
+  print "Error, this script requires the name of Python program to run"
+  sys.exit(-1)
+
+if sys.argv[1][-3:] == '.py':
+   program = sys.argv[1].rsplit('.',1)[0]
+else:
+   program = sys.argv[1]
+
+module=__import__(program)
+
+try:
+   module.main()
+except Exception, err:
+   print "Encountered an error running script ", sys.argv[1]
+   print "Error was: ", str(err)
+   sys.exit(-1)
