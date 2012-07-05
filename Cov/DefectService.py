@@ -350,4 +350,7 @@ class DefectServiceClient(WebServiceClient):
                 return mergedDefect
 
     def copy_triage(self, cids, fromStream, toStream):
+        if self.version != 'v4':
+            logging.error("Sorry, copying triage is not supported past version 5.5")
+            return
         self.client.service.copyStreamDefectStates(cids,fromStream, toStream)

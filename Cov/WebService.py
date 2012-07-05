@@ -49,6 +49,7 @@ class WebServiceClient:
 
         self.pageSpecDO.sortAscending = False
         self.pageSpecDO.startIndex = 0
+        self.version = version
 
     def getwsdl(self):
         logging.info(self.client)
