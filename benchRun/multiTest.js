@@ -1,7 +1,7 @@
 load("utils.js");
 
-var offset =  10000;
-var numDocs =  10000;
+var offset =  20000;
+var numDocs =  20000;
 
 // This assumes you have a single "example" doc in oneDoc collection
 // which will be read and inserted numDocs times (starting at _id offset
