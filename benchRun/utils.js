@@ -9,6 +9,7 @@
 // given result object returned by benchRun print a semi-pretty
 // format of its output (that matters)
 function writeObj (obj, operation) {
+   // printjson(obj); // todo 
    for (var field in obj) {
       if (field != "trapped" && field != "note") {
         if (obj[field] != 0) {
@@ -34,6 +35,7 @@ function doMany (ops, secs, threads) {
    // to see results for all, change to false; to see results for some
    // operations only, add showResult : true on the op level
    var hide = true;
+   var hostPort = getHostName() + ':' + myPort();
 
    // default 1/10th of a second
    if (!secs) secs = .1;
@@ -53,6 +55,7 @@ function doMany (ops, secs, threads) {
         print ("Running operation:" + operation.op + " (" + secs + " secs, " + threads + " threads)");
 
         res = benchRun( { ops : [ operation ],
+                      host : hostPort,
                       parallel : threads , 
                       seconds : secs
                       ,hideResults : hide
