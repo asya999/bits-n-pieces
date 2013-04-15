@@ -1,0 +1,21 @@
+connected to: 127.0.0.1
+insert  query update delete getmore command flushes mapped  vsize    res faults  locked db idx miss %     qr|qw   ar|aw  netIn netOut  conn       time 
+    *0     *0     *0     *0       0     1|0       0  1.03g   4.5g     3m     38 local:0.0%          0       0|0     0|0    62b     2k     1   08:57:51 
+    *0     *0     *0     *0       0     1|0       0  1.03g   4.5g     3m     11 twitter:0.0%          0       0|0     0|0    62b     3k     1   08:57:52 
+    *0     *0     *0     *0       0     1|0       0  1.03g   4.5g     3m      0 twitter:0.0%          0       0|0     0|0    62b     3k     1   08:57:53 
+    *0     *0     *0     *0       0     1|0       0  1.03g   4.5g     3m      0 twitter:0.0%          0       0|0     0|0    62b     3k     1   08:57:54 
+    *0     *0     *0     *0       0     1|0       0  1.03g   4.5g     3m      0 twitter:0.0%          0       0|0     0|0    62b     3k     1   08:57:55 
+    *0     *0     *0     *0       0     1|0       0  1.03g   4.5g     3m      0 twitter:0.0%          0       0|0     0|0    62b     3k     1   08:57:56 
+    *0     *0     *0     *0       0     1|0       0  1.03g   4.5g     3m      0 twitter:0.0%          0       0|0     0|0    62b     3k     1   08:57:57 
+    *0     *0     *0     *0       0     1|0       0  1.03g   4.5g     3m      0 twitter:0.0%          0       0|0     0|0    62b     3k     1   08:57:58 
+    *0     *0     *0     *0       0     1|0       0  1.03g   4.5g     3m      0 twitter:0.0%          0       0|0     0|0    62b     3k     1   08:57:59 
+    *0     *0     *0     *0       0     1|0       0  1.03g   4.5g     3m      2       .:0.0%          0       0|0     0|0    62b     3k     1   08:58:00 
+insert  query update delete getmore command flushes mapped  vsize    res faults    locked db idx miss %     qr|qw   ar|aw  netIn netOut  conn       time 
+    *0     *0     *0     *0       0     1|0       0  1.03g   4.5g     3m      0 twitter:0.0%          0       0|0     0|0    62b     3k     1   08:58:01 
+    *0     *0     *0     *0       0     1|0       0  1.03g   4.5g     3m      0 twitter:0.0%          0       0|0     0|0    62b     3k     1   08:58:02 
+    *0     *0     *0     *0       0     1|0       0  1.03g   4.5g     3m      1 twitter:0.0%          0       0|0     0|0    62b     3k     1   08:58:03 
+    *0     *0     *0     *0       0     1|0       0  1.03g   4.5g     3m      0 twitter:0.0%          0       0|0     0|0    62b     3k     1   08:58:04 
+    *0     *0     *0     *0       0     1|0       0  1.03g   4.5g     3m      0 twitter:0.0%          0       0|0     0|0    62b     3k     1   08:58:05 
+    *0     *0     *0     *0       0     1|0       0  1.03g   4.5g     3m      0 twitter:0.0%          0       0|0     0|0    62b     3k     1   08:58:06 
+    *0     *0     *0     *0       0     1|0       0  1.03g   4.5g     3m      0 twitter:0.0%          0       0|0     0|0    62b     3k     1   08:58:07 
+    *0     *0     *0     *0       0     1|0       0  1.03g   4.5g     3m      1 twitter:0.0%          0       0|0     0|0    62b     3k     1   08:58:08 

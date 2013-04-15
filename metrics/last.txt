@@ -1,0 +1,280 @@
+1 thread 2 indexes inserts    7120.372,7375.575,7535.479 150800 docs. Rate: avg/med    7344   7376
+1 thread 2 indexes upserts    4502.299,4505.044,4523.417 90200 docs. Rate: avg/med    4510   4505
+1 thread 5 indexes inserts    5277.361,5301.518,5368.389 107400 docs. Rate: avg/med    5316   5302
+1 thread 5 indexes upserts    3464.803,3485.643,3489.128 69400 docs. Rate: avg/med    3480   3486
+2 thread 2 indexes inserts    7933.653,8098.926,8117.159 162400 docs. Rate: avg/med    8050   8099
+2 thread 2 indexes upserts    4370.629,4394.507,4451.098 89200 docs. Rate: avg/med    4405   4395
+2 thread 5 indexes inserts    5138.833,5170.347,5213.483 102900 docs. Rate: avg/med    5174   5170
+2 thread 5 indexes upserts    3340.157,3374.938,3457.054 67600 docs. Rate: avg/med    3391   3375
+4 thread 2 indexes inserts    7722.239,7818.354,7927.316 154800 docs. Rate: avg/med    7823   7818
+4 thread 2 indexes upserts    4314.038,4346.307,4410.517 87100 docs. Rate: avg/med    4357   4346
+4 thread 5 indexes inserts    5050.908,5058.424,5146.765 101200 docs. Rate: avg/med    5085   5058
+4 thread 5 indexes upserts    3305.085,3315.082,3353.932 66300 docs. Rate: avg/med    3325   3315
+
+ *** Size 1000
+1 thread 2 indexes inserts    6660.671,6691.654,6779.038 135696 docs. Rate: avg/med    6710   6692
+1 thread 2 indexes upserts    3988.205,4133.553,4157.09 83200 docs. Rate: avg/med    4093   4134
+1 thread 5 indexes inserts    4502.749,4547.953,4627.686 92600 docs. Rate: avg/med    4559   4548
+1 thread 5 indexes upserts    3041.047,3140.218,3146.225 63000 docs. Rate: avg/med    3109   3140
+2 thread 2 indexes inserts    6964.428,7046.26,7156.055 143300 docs. Rate: avg/med    7056   7046
+2 thread 2 indexes upserts    3930.301,3980.224,3985.417 79800 docs. Rate: avg/med    3965   3980
+2 thread 5 indexes inserts    4500.05,4547.272,4560.147 90100 docs. Rate: avg/med    4536   4547
+2 thread 5 indexes upserts    2955.567,3001.398,3007.594 60100 docs. Rate: avg/med    2988   3001
+4 thread 2 indexes inserts    6630.386,6713.922,6746.567 135100 docs. Rate: avg/med    6697   6714
+4 thread 2 indexes upserts    3864.758,3876.794,3920.687 77784 docs. Rate: avg/med    3887   3877
+4 thread 5 indexes inserts    4365.811,4416.011,4436.69 88700 docs. Rate: avg/med    4406   4416
+4 thread 5 indexes upserts    2930.038,2967.285,2985.52 59500 docs. Rate: avg/med    2961   2967
+
+ *** Size 10240
+1 thread 2 indexes inserts    3009.936,3279.18,3606.745 72189 docs. Rate: avg/med    3299   3279
+1 thread 2 indexes upserts    2359.056,2618.822,2721.664 52400 docs. Rate: avg/med    2567   2619
+1 thread 5 indexes inserts    2187.703,2538.056,2601.768 52090 docs. Rate: avg/med    2443   2538
+1 thread 5 indexes upserts    1736.608,1957.197,1979.911 39187 docs. Rate: avg/med    1891   1957
+2 thread 2 indexes inserts    2976.922,3590.193,3648.082 71969 docs. Rate: avg/med    3405   3590
+2 thread 2 indexes upserts    2253.535,2517.257,2536.956 50800 docs. Rate: avg/med    2436   2517
+2 thread 5 indexes inserts    2266.337,2516.226,2559.66 50400 docs. Rate: avg/med    2447   2516
+2 thread 5 indexes upserts    1755.779,1956.162,1969.496 39449 docs. Rate: avg/med    1894   1956
+4 thread 2 indexes inserts    2963.678,3575.036,3621.794 71633 docs. Rate: avg/med    3387   3575
+-- This round took 23.43seconds
+4 thread 2 indexes upserts    2188.135,2559.284,2619.382 51329 docs. Rate: avg/med    2456   2559
+4 thread 5 indexes inserts    2267.016,2626.813,2631.846 53432 docs. Rate: avg/med    2509   2627
+4 thread 5 indexes upserts    1822.633,1911.369,2010.695 40797 docs. Rate: avg/med    1915   1911
+
+ *** Size 102400
+1 thread 2 indexes inserts    503.514,692.769,756.47 15140 docs. Rate: avg/med    651   693
+-- This round took 22.438seconds
+1 thread 2 indexes upserts    444.826,696.661,738.12 13959 docs. Rate: avg/med    627   697
+-- This round took 21.902seconds
+1 thread 5 indexes inserts    426.034,665.64,705.968 13621 docs. Rate: avg/med    599   666
+1 thread 5 indexes upserts    449.148,609.19,636.228 12210 docs. Rate: avg/med    565   609
+2 thread 2 indexes inserts    582.838,770.915,779.698 15426 docs. Rate: avg/med    711   771
+2 thread 2 indexes upserts    488.707,650.523,693.903 13885 docs. Rate: avg/med    611   651
+2 thread 5 indexes inserts    485.233,657.537,688.75 13848 docs. Rate: avg/med    611   658
+2 thread 5 indexes upserts    425.116,600.556,608.365 12174 docs. Rate: avg/med    545   601
+4 thread 2 indexes inserts    561.613,778.027,786.039 15742 docs. Rate: avg/med    709   778
+4 thread 2 indexes upserts    452.045,680.795,688.72 14074 docs. Rate: avg/med    607   681
+4 thread 5 indexes inserts    481.121,686.24,714.878 14129 docs. Rate: avg/med    627   686
+4 thread 5 indexes upserts    441.947,625.056,634.675 12523 docs. Rate: avg/med    567   625
+
+ *** Size 100
+1 thread 2 indexes inserts    1731.623,2345.309,2558.322 47000 docs. Rate: avg/med    2212   2345
+1 thread 2 indexes upserts    1784.879,1834.588,1922.885 38500 docs. Rate: avg/med    1847   1835
+1 thread 5 indexes inserts    2367.396,2441.338,2482.631 48900 docs. Rate: avg/med    2430   2441
+1 thread 5 indexes upserts    1819.975,1853.61,1863.323 37300 docs. Rate: avg/med    1846   1854
+2 thread 2 indexes inserts    2362.513,2380.6,2508.996 48300 docs. Rate: avg/med    2417   2381
+2 thread 2 indexes upserts    1747.399,1797.035,1846.031 35100 docs. Rate: avg/med    1797   1797
+2 thread 5 indexes inserts    2451.935,2456.297,2472.651 49100 docs. Rate: avg/med    2460   2456
+2 thread 5 indexes upserts    1723.282,1807.831,1816.821 36200 docs. Rate: avg/med    1783   1808
+4 thread 2 indexes inserts    2285.968,2382.134,2433.308 48000 docs. Rate: avg/med    2367   2382
+4 thread 2 indexes upserts    1708.528,1723.022,1783.032 35100 docs. Rate: avg/med    1738   1723
+4 thread 5 indexes inserts    2215.929,2317.122,2502.493 44600 docs. Rate: avg/med    2345   2317
+4 thread 5 indexes upserts    1658.871,1717.337,1742.634 34400 docs. Rate: avg/med    1706   1717
+
+ *** Size 1000
+1 thread 2 indexes inserts    2172.407,2248.876,2269.574 43900 docs. Rate: avg/med    2230   2249
+1 thread 2 indexes upserts    1627.052,1648.599,1733.314 33000 docs. Rate: avg/med    1670   1649
+1 thread 5 indexes inserts    1952.532,2025.658,2164.026 39900 docs. Rate: avg/med    2047   2026
+1 thread 5 indexes upserts    1474.372,1504.549,1617.17 30100 docs. Rate: avg/med    1532   1505
+2 thread 2 indexes inserts    1904.854,2010.299,2062.558 39600 docs. Rate: avg/med    1993   2010
+2 thread 2 indexes upserts    1400.301,1480.418,1484.15 28800 docs. Rate: avg/med    1455   1480
+2 thread 5 indexes inserts    1898.916,1973.812,1978.736 39600 docs. Rate: avg/med    1950   1974
+2 thread 5 indexes upserts    1455.404,1467.212,1513.411 29143 docs. Rate: avg/med    1479   1467
+4 thread 2 indexes inserts    1890.18,1903.48,1906.093 38180 docs. Rate: avg/med    1900   1903
+4 thread 2 indexes upserts    1359.697,1440.463,1441.28 27300 docs. Rate: avg/med    1414   1440
+4 thread 5 indexes inserts    2004.888,2364.747,2608.351 52600 docs. Rate: avg/med    2326   2365
+4 thread 5 indexes upserts    1925.565,2020.152,2027.094 38700 docs. Rate: avg/med    1991   2020
+
+ *** Size 10240
+1 thread 2 indexes inserts    1425.941,1481.781,1518.406 28573 docs. Rate: avg/med    1475   1482
+1 thread 2 indexes upserts    1417.012,1417.944,932.299 18687 docs. Rate: avg/med    1256   1418
+1 thread 5 indexes inserts    1337.878,1494.965,977.786 19587 docs. Rate: avg/med    1270   1495
+1 thread 5 indexes upserts    708.159,916.883,957.437 14200 docs. Rate: avg/med    861   917
+2 thread 2 indexes inserts    1016.776,1078.621,885.096 17863 docs. Rate: avg/med    993   1079
+-- This round took 21.023seconds
+2 thread 2 indexes upserts    756.579,836.132,868.914 15668 docs. Rate: avg/med    821   836
+-- This round took 21.009seconds
+2 thread 5 indexes inserts    1024.385,1051.692,790.044 15981 docs. Rate: avg/med    955   1052
+2 thread 5 indexes upserts    694.274,824.049,884.425 14368 docs. Rate: avg/med    801   824
+4 thread 2 indexes inserts    945.257,954.898,979.899 19063 docs. Rate: avg/med    960   955
+4 thread 2 indexes upserts    1335.59,1397.468,993.778 19964 docs. Rate: avg/med    1242   1397
+-- This round took 25.607seconds
+4 thread 5 indexes inserts    1090.795,1295.532,1507.246 26995 docs. Rate: avg/med    1298   1296
+4 thread 5 indexes upserts    1018.085,1461.018,884.428 29365 docs. Rate: avg/med    1121   1461
+
+ *** Size 102400
+1 thread 2 indexes inserts    189.433,203.531,334.031 4092 docs. Rate: avg/med    242   204
+1 thread 2 indexes upserts    186.639,216.538,292.237 5850 docs. Rate: avg/med    232   217
+1 thread 5 indexes inserts    139.54,213.608,282.745 4342 docs. Rate: avg/med    212   214
+1 thread 5 indexes upserts    178.536,209.467,298.512 4213 docs. Rate: avg/med    229   209
+2 thread 2 indexes inserts    195.234,223.787,325.146 6513 docs. Rate: avg/med    248   224
+2 thread 2 indexes upserts    152.666,196.025,241.735 3935 docs. Rate: avg/med    197   196
+2 thread 5 indexes inserts    199.462,207.755,308.898 4174 docs. Rate: avg/med    239   208
+2 thread 5 indexes upserts    189.075,224.8,305.865 6128 docs. Rate: avg/med    240   225
+4 thread 2 indexes inserts    132.801,237.314,239.624 4761 docs. Rate: avg/med    203   237
+4 thread 2 indexes upserts    177.361,191.258,289.99 3855 docs. Rate: avg/med    220   191
+4 thread 5 indexes inserts    211.285,216.504,293.749 5912 docs. Rate: avg/med    241   217
+4 thread 5 indexes upserts    121.671,193.642,219.455 3886 docs. Rate: avg/med    178   194
+port will be: 37017
+
+ *** Size 100
+1 thread 2 indexes inserts    5322.814,6517.83,6633.502 132743 docs. Rate: avg/med    6158   6518
+1 thread 2 indexes upserts    3706.845,3735.704,3809.167 74300 docs. Rate: avg/med    3751   3736
+1 thread 5 indexes inserts    4130.456,4272.31,4406.695 85600 docs. Rate: avg/med    4270   4272
+1 thread 5 indexes upserts    2802.573,2865.845,2930.019 58700 docs. Rate: avg/med    2866   2866
+2 thread 2 indexes inserts    6867.473,6876.061,7038.358 137700 docs. Rate: avg/med    6927   6876
+2 thread 2 indexes upserts    3896.688,3939.56,4047.916 81100 docs. Rate: avg/med    3961   3940
+2 thread 5 indexes inserts    4435.906,4505.133,4576.533 91700 docs. Rate: avg/med    4506   4505
+2 thread 5 indexes upserts    2915.19,3023.79,3039.059 60500 docs. Rate: avg/med    2993   3024
+4 thread 2 indexes inserts    6742.92,6795.39,7071.514 141600 docs. Rate: avg/med    6870   6795
+4 thread 2 indexes upserts    3888.141,3959.551,4044.393 79389 docs. Rate: avg/med    3964   3960
+4 thread 5 indexes inserts    4509.853,4549.532,4747.893 91300 docs. Rate: avg/med    4602   4550
+4 thread 5 indexes upserts    2794.799,2841.786,2907.441 56100 docs. Rate: avg/med    2848   2842
+
+ *** Size 1000
+1 thread 2 indexes inserts    5343.778,5904.981,6307.431 126300 docs. Rate: avg/med    5852   5905
+1 thread 2 indexes upserts    3403.128,3873.609,3984.403 79704 docs. Rate: avg/med    3754   3874
+1 thread 5 indexes inserts    3993.61,4296.348,4374.575 87544 docs. Rate: avg/med    4222   4296
+1 thread 5 indexes upserts    2427.451,2938.384,2943.381 58900 docs. Rate: avg/med    2770   2938
+2 thread 2 indexes inserts    6042.447,6453.083,6536.405 129152 docs. Rate: avg/med    6344   6453
+2 thread 2 indexes upserts    3376.961,3680.767,3738.318 73700 docs. Rate: avg/med    3599   3681
+2 thread 5 indexes inserts    3820.068,4140.032,4154.599 82900 docs. Rate: avg/med    4038   4140
+2 thread 5 indexes upserts    2465.742,2674.356,2757.555 55300 docs. Rate: avg/med    2633   2674
+4 thread 2 indexes inserts    5557.22,6062.572,6128.453 122900 docs. Rate: avg/med    5916   6063
+4 thread 2 indexes upserts    3333.666,3540.308,3620.655 72500 docs. Rate: avg/med    3498   3540
+4 thread 5 indexes inserts    3801.636,4096.241,4183.516 83800 docs. Rate: avg/med    4027   4096
+4 thread 5 indexes upserts    2667.33,2896.819,2919.527 58200 docs. Rate: avg/med    2828   2897
+
+ *** Size 10240
+1 thread 2 indexes inserts    1394.391,2670.994,3144.968 63000 docs. Rate: avg/med    2403   2671
+-- This round took 30.628seconds
+1 thread 2 indexes upserts    2470.861,2618.56,901.136 49563 docs. Rate: avg/med    1997   2619
+1 thread 5 indexes inserts    2498.627,2591.185,607.726 50055 docs. Rate: avg/med    1899   2591
+1 thread 5 indexes upserts    1912.732,1947.76,844.704 16900 docs. Rate: avg/med    1568   1948
+-- This round took 24.034seconds
+2 thread 2 indexes inserts    3238.215,3253.493,341.183 8200 docs. Rate: avg/med    2278   3253
+-- This round took 33.816seconds
+2 thread 2 indexes upserts    1293.885,2412.043,2490.268 48470 docs. Rate: avg/med    2065   2412
+-- This round took 21.539seconds
+2 thread 5 indexes inserts    2413.432,2520.296,370.676 48370 docs. Rate: avg/med    1768   2520
+2 thread 5 indexes upserts    1858.054,1865.505,409.549 37568 docs. Rate: avg/med    1378   1866
+-- This round took 27.484seconds
+4 thread 2 indexes inserts    135.715,3252.469,3289.761 65963 docs. Rate: avg/med    2226   3252
+-- This round took 36.281seconds
+-- This round took 33.271seconds
+4 thread 2 indexes upserts    1061.161,1317.694,2415.411 43841 docs. Rate: avg/med    1598   1318
+-- This round took 21.258seconds
+4 thread 5 indexes inserts    2470.732,2491.891,450.889 9585 docs. Rate: avg/med    1805   2492
+4 thread 5 indexes upserts    1787.903,1887.992,680.063 13859 docs. Rate: avg/med    1452   1888
+
+ *** Size 102400
+-- This round took 41.485seconds
+1 thread 2 indexes inserts    424.265,518.574,91.334 3789 docs. Rate: avg/med    345   519
+-- This round took 57.544seconds
+-- This round took 41.974seconds
+1 thread 2 indexes upserts    192.357,23.824,587.178 1000 docs. Rate: avg/med    268   24
+-- This round took 62.004seconds
+-- This round took 58.916seconds
+-- This round took 60.56seconds
+1 thread 5 indexes inserts    195.616,200.413,201.219 12137 docs. Rate: avg/med    199   200
+-- This round took 52.822seconds
+-- This round took 48.56seconds
+1 thread 5 indexes upserts    195.581,598.795,66.371 3223 docs. Rate: avg/med    287   599
+-- This round took 53.935seconds
+-- This round took 46.55seconds
+2 thread 2 indexes inserts    206.99,23.502,641.43 1094 docs. Rate: avg/med    291   24
+-- This round took 48.264seconds
+-- This round took 52.099seconds
+2 thread 2 indexes upserts    202.18,659.269,93.361 4864 docs. Rate: avg/med    318   659
+-- This round took 45.228seconds
+-- This round took 55.063seconds
+2 thread 5 indexes inserts    108.875,197.488,653.848 5995 docs. Rate: avg/med    320   197
+-- This round took 40.715seconds
+-- This round took 55.375seconds
+2 thread 5 indexes upserts    134.664,191.502,613.549 7457 docs. Rate: avg/med    313   192
+-- This round took 61.317seconds
+-- This round took 65.286seconds
+-- This round took 41.489seconds
+4 thread 2 indexes inserts    196.06,203.157,208.778 8662 docs. Rate: avg/med    203   203
+-- This round took 52.158seconds
+-- This round took 54.702seconds
+4 thread 2 indexes upserts    123.95,194.746,607.792 10653 docs. Rate: avg/med    309   195
+-- This round took 47.384seconds
+-- This round took 51.904seconds
+4 thread 5 indexes inserts    200.64,27.646,636.341 10414 docs. Rate: avg/med    288   28
+-- This round took 41.842seconds
+4 thread 5 indexes upserts    45.409,546.251,599.341 12000 docs. Rate: avg/med    397   546
+
+ *** Size 100
+-- This round took 42.972seconds
+1 thread 2 indexes inserts    2364.326,2429.028,32.579 48600 docs. Rate: avg/med    1609   2429
+1 thread 2 indexes upserts    1706.857,1718.539,1734.133 34400 docs. Rate: avg/med    1720   1719
+1 thread 5 indexes inserts    2292.393,2501.354,2563.462 51300 docs. Rate: avg/med    2452   2501
+1 thread 5 indexes upserts    1653.182,1738.349,1764.647 34800 docs. Rate: avg/med    1719   1738
+2 thread 2 indexes inserts    2134.591,2300.514,2411.292 46100 docs. Rate: avg/med    2282   2301
+2 thread 2 indexes upserts    1575.228,1712.517,1733.613 34700 docs. Rate: avg/med    1674   1713
+2 thread 5 indexes inserts    2101.384,2265.356,2282.809 45400 docs. Rate: avg/med    2217   2265
+2 thread 5 indexes upserts    1298.766,1337.259,1358.277 26800 docs. Rate: avg/med    1331   1337
+4 thread 2 indexes inserts    1940.202,1975.911,1985.075 39700 docs. Rate: avg/med    1967   1976
+4 thread 2 indexes upserts    1268.269,1469.309,1487.063 30000 docs. Rate: avg/med    1408   1469
+4 thread 5 indexes inserts    1737.663,1957.083,2121.408 42600 docs. Rate: avg/med    1939   1957
+4 thread 5 indexes upserts    1577.664,1620.359,1676.688 34300 docs. Rate: avg/med    1625   1620
+
+ *** Size 1000
+1 thread 2 indexes inserts    1913.947,2206.979,2218.115 44400 docs. Rate: avg/med    2113   2207
+1 thread 2 indexes upserts    1263.644,1595.824,1652.439 33100 docs. Rate: avg/med    1504   1596
+1 thread 5 indexes inserts    1858.699,2071.408,2105.42 42500 docs. Rate: avg/med    2012   2071
+1 thread 5 indexes upserts    1209.093,1556.886,1621.19 31200 docs. Rate: avg/med    1462   1557
+2 thread 2 indexes inserts    1623.62,1946.797,2190.619 43900 docs. Rate: avg/med    1920   1947
+2 thread 2 indexes upserts    1264.241,1530.79,1666.949 30700 docs. Rate: avg/med    1487   1531
+2 thread 5 indexes inserts    1580.601,1904.384,1988.575 39857 docs. Rate: avg/med    1825   1904
+2 thread 5 indexes upserts    1043.852,1326.749,1417.873 26600 docs. Rate: avg/med    1263   1327
+4 thread 2 indexes inserts    1546.568,1901.873,1912.853 38500 docs. Rate: avg/med    1787   1902
+4 thread 2 indexes upserts    1076.384,1483.503,1634.606 32800 docs. Rate: avg/med    1398   1484
+4 thread 5 indexes inserts    1685.118,2055.06,2148.513 44500 docs. Rate: avg/med    1963   2055
+4 thread 5 indexes upserts    1365.426,1662.309,1728.553 33700 docs. Rate: avg/med    1585   1662
+
+ *** Size 10240
+1 thread 2 indexes inserts    1069.571,1085.806,452.251 21800 docs. Rate: avg/med    869   1086
+-- This round took 21.244seconds
+1 thread 2 indexes upserts    1005.689,1183.816,70.608 23700 docs. Rate: avg/med    753   1184
+-- This round took 26.248seconds
+1 thread 5 indexes inserts    156.202,1570.459,1648.269 31483 docs. Rate: avg/med    1125   1570
+-- This round took 33.988seconds
+1 thread 5 indexes upserts    1150.508,1291.875,579.616 23200 docs. Rate: avg/med    1007   1292
+2 thread 2 indexes inserts    1097.779,1208.89,74.918 22095 docs. Rate: avg/med    794   1209
+-- This round took 34.504seconds
+2 thread 2 indexes upserts    1031.803,125.797,497.565 17168 docs. Rate: avg/med    552   126
+-- This round took 21.788seconds
+2 thread 5 indexes inserts    1039.087,1039.868,160.639 3500 docs. Rate: avg/med    747   1040
+-- This round took 25.403seconds
+2 thread 5 indexes upserts    15.746,201.536,342.515 400 docs. Rate: avg/med    187   202
+-- This round took 21.737seconds
+4 thread 2 indexes inserts    118.086,1183.982,165.524 23830 docs. Rate: avg/med    489   1184
+-- This round took 35.82seconds
+4 thread 2 indexes upserts    1011.946,357.342,954.865 19696 docs. Rate: avg/med    775   357
+-- This round took 32.2seconds
+4 thread 5 indexes inserts    1042.35,545.435,998.993 20827 docs. Rate: avg/med    862   545
+4 thread 5 indexes upserts    138.517,879.764,945.666 19789 docs. Rate: avg/med    655   880
+
+ *** Size 102400
+1 thread 2 indexes inserts    24.881,29.53,9.794 600 docs. Rate: avg/med    2   30
+1 thread 2 indexes upserts    124.87,25.397,8.749 2530 docs. Rate: avg/med    53   25
+-- This round took 54.145seconds
+1 thread 5 indexes inserts    113.193,214.453,67.596 3660 docs. Rate: avg/med    132   214
+1 thread 5 indexes upserts    179.973,36.553,73.961 1498 docs. Rate: avg/med    97   37
+-- This round took 35.818seconds
+2 thread 2 indexes inserts    13.764,31.145,32.383 633 docs. Rate: avg/med    26   31
+2 thread 2 indexes upserts    212.855,229.029,63.024 4272 docs. Rate: avg/med    168   229
+-- This round took 46.209seconds
+2 thread 5 indexes inserts    193.009,29.864,52.676 1058 docs. Rate: avg/med    92   30
+2 thread 5 indexes upserts    24.143,35.629,83.427 496 docs. Rate: avg/med    48   36
+-- This round took 32.119seconds
+4 thread 2 indexes inserts    10.056,217.919,25.412 4395 docs. Rate: avg/med    84   218
+-- This round took 43.739seconds
+4 thread 2 indexes upserts    203.2,221.87,28.464 4089 docs. Rate: avg/med    151   222
+-- This round took 29.892seconds
+-- This round took 21.572seconds
+4 thread 5 indexes inserts    22.251,50.586,89.288 480 docs. Rate: avg/med    54   51
+-- This round took 21.717seconds
+-- This round took 29.606seconds
+4 thread 5 indexes upserts    12.531,20.215,24.018 371 docs. Rate: avg/med    19   20

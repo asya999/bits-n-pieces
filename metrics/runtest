@@ -1,0 +1,105 @@
+#!/bin/bash
+
+port=27017
+# default DB name
+dbname=test1
+
+while getopts ":hd:l:r:p:" opt; do
+  case $opt in
+    h)
+      echo "Usage: $0 -d dbname file.js [file [file[...]]]"
+      echo ""
+      echo "Run Javascript from file.js on dbname starting mongod if needed"
+      echo ""
+      echo "          -d dbname   -- use dbname"
+      echo "          -r filepath -- mongorestore data from file (dump)"
+      echo "          -l filepath -- load (mongoimport) data from file (json)"
+      echo "          -h          -- print help"
+      echo "          -p          -- port mongod is running on"
+      echo ""
+      exit 0
+      ;;
+    d)
+      echo "database: $OPTARG" >&2
+      dbname=$OPTARG
+      ;;
+    l)
+      echo "loadpath: $OPTARG" >&2
+      loadpath=$OPTARG
+      ;;
+    p)
+      echo "port will be: $OPTARG" >&2
+      port=$OPTARG
+      ;;
+    r)
+      echo "restorepath: $OPTARG" >&2
+      restorepath=$OPTARG
+      ;;
+    \?)
+      echo "Invalid option: -$OPTARG" >&2
+      exit 1
+      ;;
+  esac
+done
+
+host=localhost:$port
+
+if [[ ! -z $loadpath && ! -z $restorepath ]]; then
+    echo "Cannot specify both Load and Restore"
+    exit 1
+fi
+
+# echo "Load " $loadpath " Restore " $restorepath
+
+shift $((OPTIND-1))
+
+# echo "Database is " $dbname
+
+mongo --eval 1 --quiet $host\/$dbname > /dev/null 2>&1
+mstatus=$?
+
+if [[ -z $1 ]]; then
+  echo "Must specify a file"
+  exit 1
+fi
+
+if [[ $mstatus -ne 0 ]]; then
+   echo "Starting mongod"
+   mongod --port $port --dbpath /data/jstests --logpath /data/tests-log/log --logappend --fork --profile 2
+fi
+
+# load data if options for load is specified
+if [[ ! -z $loadpath ]]; then
+    echo "Loading (importing) from " $loadpath
+    mongoimport -h $host -d $dbpath $loadpath > ./error 2>&1
+    grep ERROR: ./error
+    stat=$?
+    if [[ $stat -eq 0 ]]; then
+       echo "Error importing " $loadpath
+       exit 1
+    fi
+fi
+
+if [[ ! -z $restorepath ]]; then
+    echo "Restoring from " $restorepath
+    mongorestore -h $host -d dbpath $restorepath > ./error 2>&1
+    grep ERROR: ./error
+    stat=$?
+    if [[ $stat -eq 0 ]]; then
+       echo "Error restoring " $restorepath
+       exit 1
+    fi
+fi
+
+
+
+while [[ ! -z $1 ]]; do
+   filename=$1
+   if [[ -f $filename ]]; then 
+       mongo --quiet $host\/$dbname $filename
+   else
+      echo "File " $filename " does not exist"
+   fi 
+   shift 1
+done
+

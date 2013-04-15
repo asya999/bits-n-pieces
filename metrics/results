@@ -1,0 +1,576 @@
+/runtest -p 27017 insertVupsertFull.js ; ./runtest -p 37017 insertVupsertFull.js 
+port will be: 27017
+
+ *** Size 100
+localhost:27017: 1 threads, not indexed inserts ran 20.015 seconds, 120576 docs. Rate: 6024.281788658506 ops.
+localhost:27017: 1 threads, not indexed upserts ran 20.009 seconds, 75900 docs. Rate: 3793.293018141836 ops.
+localhost:27017: 1 threads, indexed     inserts ran 20.017 seconds, 81500 docs. Rate: 4071.5391916870662 ops.
+localhost:27017: 1 threads, indexed     upserts ran 20.018 seconds, 59206 docs. Rate: 2957.6381256868817 ops.
+localhost:27017: 2 threads, not indexed inserts ran 20.025 seconds, 134100 docs. Rate: 6696.6292134831465 ops.
+localhost:27017: 2 threads, not indexed upserts ran 20.034 seconds, 80500 docs. Rate: 4018.1691125087355 ops.
+localhost:27017: 2 threads, indexed     inserts ran 20.056 seconds, 86600 docs. Rate: 4317.909852413242 ops.
+localhost:27017: 2 threads, indexed     upserts ran 20.07 seconds, 57000 docs. Rate: 2840.0597907324363 ops.
+localhost:27017: 4 threads, not indexed inserts ran 20.024 seconds, 125806 docs. Rate: 6282.76068717539 ops.
+localhost:27017: 4 threads, not indexed upserts ran 20.063 seconds, 75900 docs. Rate: 3783.0832876439217 ops.
+localhost:27017: 4 threads, indexed     inserts ran 20.05 seconds, 84300 docs. Rate: 4204.488778054862 ops.
+localhost:27017: 4 threads, indexed     upserts ran 20.034 seconds, 54300 docs. Rate: 2710.3923330338425 ops.
+
+ *** Size 100
+localhost:27017: 1 threads, not indexed inserts ran 20.012 seconds, 108700 docs. Rate: 5431.740955426744 ops.
+localhost:27017: 1 threads, not indexed upserts ran 20.089 seconds, 75600 docs. Rate: 3763.2535218278663 ops.
+localhost:27017: 1 threads, indexed     inserts ran 20.132 seconds, 76500 docs. Rate: 3799.9205245380485 ops.
+localhost:27017: 1 threads, indexed     upserts ran 20.023 seconds, 55500 docs. Rate: 2771.81241572192 ops.
+localhost:27017: 2 threads, not indexed inserts ran 20.019 seconds, 122300 docs. Rate: 6109.196263549628 ops.
+localhost:27017: 2 threads, not indexed upserts ran 20.038 seconds, 70800 docs. Rate: 3533.286755165186 ops.
+localhost:27017: 2 threads, indexed     inserts ran 20.056 seconds, 80300 docs. Rate: 4003.789389708815 ops.
+localhost:27017: 2 threads, indexed     upserts ran 20.069 seconds, 54000 docs. Rate: 2690.717026259405 ops.
+localhost:27017: 4 threads, not indexed inserts ran 20.074 seconds, 119200 docs. Rate: 5938.029291621002 ops.
+localhost:27017: 4 threads, not indexed upserts ran 20.06 seconds, 74700 docs. Rate: 3723.8285144566303 ops.
+localhost:27017: 4 threads, indexed     inserts ran 20.049 seconds, 83100 docs. Rate: 4144.84512943289 ops.
+localhost:27017: 4 threads, indexed     upserts ran 20.111 seconds, 54200 docs. Rate: 2695.042514047039 ops.
+
+ *** Size 100
+localhost:27017: 1 threads, not indexed inserts ran 20.012 seconds, 32483 docs. Rate: 1623.176094343394 ops.
+localhost:27017: 1 threads, not indexed upserts ran 20.039 seconds, 44628 docs. Rate: 2227.0572383851486 ops.
+localhost:27017: 1 threads, indexed     inserts ran 23.976 seconds, 48565 docs. Rate: 2025.5672339005673 ops.
+localhost:27017: 1 threads, indexed     upserts ran 20.116 seconds, 43923 docs. Rate: 2183.485782461722 ops.
+localhost:27017: 2 threads, not indexed inserts ran 20.392 seconds, 65323 docs. Rate: 3203.3640643389567 ops.
+localhost:27017: 2 threads, not indexed upserts ran 20.073 seconds, 45289 docs. Rate: 2256.214815921885 ops.
+localhost:27017: 2 threads, indexed     inserts ran 20.014 seconds, 54567 docs. Rate: 2726.4414909563307 ops.
+localhost:27017: 2 threads, indexed     upserts ran 20.013 seconds, 42142 docs. Rate: 2105.7312746714633 ops.
+localhost:27017: 4 threads, not indexed inserts ran 23.77 seconds, 62858 docs. Rate: 2644.425746739588 ops.
+localhost:27017: 4 threads, not indexed upserts ran 20.061 seconds, 52220 docs. Rate: 2603.060664971836 ops.
+localhost:27017: 4 threads, indexed     inserts ran 21.178 seconds, 45951 docs. Rate: 2169.751629049013 ops.
+localhost:27017: 4 threads, indexed     upserts ran 20.075 seconds, 38441 docs. Rate: 1914.8692403486925 ops.
+
+ *** Size 100
+localhost:27017: 1 threads, not indexed inserts ran 20.011 seconds, 5351 docs. Rate: 267.40292838938586 ops.
+localhost:27017: 1 threads, not indexed upserts ran 21.944 seconds, 7646 docs. Rate: 348.4323733138899 ops.
+localhost:27017: 1 threads, indexed     inserts ran 20.328 seconds, 5808 docs. Rate: 285.7142857142857 ops.
+localhost:27017: 1 threads, indexed     upserts ran 20.045 seconds, 8913 docs. Rate: 444.6495385382888 ops.
+localhost:27017: 2 threads, not indexed inserts ran 24.616 seconds, 9678 docs. Rate: 393.1589210269743 ops.
+localhost:27017: 2 threads, not indexed upserts ran 20.029 seconds, 11607 docs. Rate: 579.5097109191672 ops.
+localhost:27017: 2 threads, indexed     inserts ran 23.497 seconds, 13821 docs. Rate: 588.2027492871431 ops.
+localhost:27017: 2 threads, indexed     upserts ran 20.03 seconds, 8098 docs. Rate: 404.29355966050923 ops.
+localhost:27017: 4 threads, not indexed inserts ran 22.609 seconds, 14649 docs. Rate: 647.9278163563182 ops.
+localhost:27017: 4 threads, not indexed upserts ran 23.636 seconds, 15219 docs. Rate: 643.8906752411576 ops.
+localhost:27017: 4 threads, indexed     inserts ran 20.901 seconds, 9228 docs. Rate: 441.5099755992536 ops.
+localhost:27017: 4 threads, indexed     upserts ran 20.22 seconds, 7115 docs. Rate: 351.87932739861526 ops.
+
+ *** Size 100
+localhost:27017: 1 threads, not indexed inserts ran 21.373 seconds, 57800 docs. Rate: 2704.346605530342 ops.
+localhost:27017: 1 threads, not indexed upserts ran 20.156 seconds, 46400 docs. Rate: 2302.0440563603893 ops.
+localhost:27017: 1 threads, indexed     inserts ran 20.008 seconds, 61000 docs. Rate: 3048.7804878048782 ops.
+localhost:27017: 1 threads, indexed     upserts ran 20.009 seconds, 45400 docs. Rate: 2268.9789594682393 ops.
+localhost:27017: 2 threads, not indexed inserts ran 20.218 seconds, 59800 docs. Rate: 2957.7604115144923 ops.
+localhost:27017: 2 threads, not indexed upserts ran 20.157 seconds, 47400 docs. Rate: 2351.5404077987796 ops.
+localhost:27017: 2 threads, indexed     inserts ran 20.129 seconds, 61000 docs. Rate: 3030.453574444831 ops.
+localhost:27017: 2 threads, indexed     upserts ran 20.092 seconds, 47800 docs. Rate: 2379.0563408321723 ops.
+localhost:27017: 4 threads, not indexed inserts ran 20.03 seconds, 63200 docs. Rate: 3155.2670993509732 ops.
+localhost:27017: 4 threads, not indexed upserts ran 20.322 seconds, 45700 docs. Rate: 2248.794409999016 ops.
+localhost:27017: 4 threads, indexed     inserts ran 20.02 seconds, 64800 docs. Rate: 3236.763236763237 ops.
+localhost:27017: 4 threads, indexed     upserts ran 20.036 seconds, 47200 docs. Rate: 2355.7596326612097 ops.
+
+ *** Size 100
+localhost:27017: 1 threads, not indexed inserts ran 20.299 seconds, 58500 docs. Rate: 2881.9153652889304 ops.
+localhost:27017: 1 threads, not indexed upserts ran 20.005 seconds, 47400 docs. Rate: 2369.407648087978 ops.
+localhost:27017: 1 threads, indexed     inserts ran 20.012 seconds, 57100 docs. Rate: 2853.28802718369 ops.
+localhost:27017: 1 threads, indexed     upserts ran 20.012 seconds, 40400 docs. Rate: 2018.7887267639417 ops.
+localhost:27017: 2 threads, not indexed inserts ran 20.096 seconds, 58300 docs. Rate: 2901.0748407643314 ops.
+localhost:27017: 2 threads, not indexed upserts ran 20.054 seconds, 42600 docs. Rate: 2124.264485888102 ops.
+localhost:27017: 2 threads, indexed     inserts ran 20.04 seconds, 55000 docs. Rate: 2744.5109780439125 ops.
+localhost:27017: 2 threads, indexed     upserts ran 20.024 seconds, 40800 docs. Rate: 2037.554934079105 ops.
+localhost:27017: 4 threads, not indexed inserts ran 20.277 seconds, 55800 docs. Rate: 2751.8863737239235 ops.
+localhost:27017: 4 threads, not indexed upserts ran 20.095 seconds, 38700 docs. Rate: 1925.8522020403086 ops.
+localhost:27017: 4 threads, indexed     inserts ran 20.094 seconds, 53600 docs. Rate: 2667.4629242559968 ops.
+localhost:27017: 4 threads, indexed     upserts ran 20.068 seconds, 42500 docs. Rate: 2117.7994817620092 ops.
+
+ *** Size 100
+localhost:27017: 1 threads, not indexed inserts ran 20.01 seconds, 23272 docs. Rate: 1163.0184907546227 ops.
+localhost:27017: 1 threads, not indexed upserts ran 20.029 seconds, 20493 docs. Rate: 1023.1664087073743 ops.
+localhost:27017: 1 threads, indexed     inserts ran 20.256 seconds, 24253 docs. Rate: 1197.3242496050552 ops.
+localhost:27017: 1 threads, indexed     upserts ran 20.073 seconds, 19285 docs. Rate: 960.7432870024411 ops.
+localhost:27017: 2 threads, not indexed inserts ran 20.14 seconds, 26308 docs. Rate: 1306.256206554121 ops.
+localhost:27017: 2 threads, not indexed upserts ran 20.02 seconds, 15806 docs. Rate: 789.5104895104895 ops.
+localhost:27017: 2 threads, indexed     inserts ran 20.018 seconds, 22204 docs. Rate: 1109.201718453392 ops.
+localhost:27017: 2 threads, indexed     upserts ran 20.227 seconds, 24352 docs. Rate: 1203.9353339595589 ops.
+localhost:27017: 4 threads, not indexed inserts ran 20.037 seconds, 25264 docs. Rate: 1260.8673953186606 ops.
+localhost:27017: 4 threads, not indexed upserts ran 20.06 seconds, 13571 docs. Rate: 676.5204386839482 ops.
+localhost:27017: 4 threads, indexed     inserts ran 20.035 seconds, 21554 docs. Rate: 1075.8173196905416 ops.
+localhost:27017: 4 threads, indexed     upserts ran 20.046 seconds, 21277 docs. Rate: 1061.4087598523397 ops.
+
+ *** Size 100
+localhost:27017: 1 threads, not indexed inserts ran 21.387 seconds, 382 docs. Rate: 17.861317622855005 ops.
+localhost:27017: 1 threads, not indexed upserts ran 21.659 seconds, 1383 docs. Rate: 63.85336349785309 ops.
+localhost:27017: 1 threads, indexed     inserts ran 20.175 seconds, 4580 docs. Rate: 227.01363073110284 ops.
+localhost:27017: 1 threads, indexed     upserts ran 24.542 seconds, 2000 docs. Rate: 81.49295085975062 ops.
+localhost:27017: 2 threads, not indexed inserts ran 20.026 seconds, 5014 docs. Rate: 250.3745131329272 ops.
+localhost:27017: 2 threads, not indexed upserts ran 20.522 seconds, 6099 docs. Rate: 297.193256017932 ops.
+localhost:27017: 2 threads, indexed     inserts ran 20.012 seconds, 3469 docs. Rate: 173.34599240455725 ops.
+localhost:27017: 2 threads, indexed     upserts ran 20.025 seconds, 3763 docs. Rate: 187.91510611735333 ops.
+localhost:27017: 4 threads, not indexed inserts ran 22.529 seconds, 2098 docs. Rate: 93.12441741755072 ops.
+localhost:27017: 4 threads, not indexed upserts ran 20.106 seconds, 1545 docs. Rate: 76.84273351238436 ops.
+localhost:27017: 4 threads, indexed     inserts ran 24.313 seconds, 3990 docs. Rate: 164.10973553243122 ops.
+localhost:27017: 4 threads, indexed     upserts ran 28.941 seconds, 4535 docs. Rate: 156.6981099478249 ops.
+port will be: 37017
+
+ *** Size 100
+localhost:37017: 1 threads, not indexed inserts ran 20.021 seconds, 127000 docs. Rate: 6343.339493531791 ops.
+localhost:37017: 1 threads, not indexed upserts ran 20.037 seconds, 74600 docs. Rate: 3723.1122423516495 ops.
+localhost:37017: 1 threads, indexed     inserts ran 20.033 seconds, 92700 docs. Rate: 4627.364848000799 ops.
+localhost:37017: 1 threads, indexed     upserts ran 20.015 seconds, 64700 docs. Rate: 3232.575568323757 ops.
+localhost:37017: 2 threads, not indexed inserts ran 20.027 seconds, 154900 docs. Rate: 7734.558346232586 ops.
+localhost:37017: 2 threads, not indexed upserts ran 20.027 seconds, 87200 docs. Rate: 4354.121935387227 ops.
+localhost:37017: 2 threads, indexed     inserts ran 20.02 seconds, 97400 docs. Rate: 4865.134865134865 ops.
+localhost:37017: 2 threads, indexed     upserts ran 20.019 seconds, 65700 docs. Rate: 3281.8822118986964 ops.
+localhost:37017: 4 threads, not indexed inserts ran 20.03 seconds, 156200 docs. Rate: 7798.302546180728 ops.
+localhost:37017: 4 threads, not indexed upserts ran 20.036 seconds, 84700 docs. Rate: 4227.390696745857 ops.
+localhost:37017: 4 threads, indexed     inserts ran 20.069 seconds, 98600 docs. Rate: 4913.049977577359 ops.
+localhost:37017: 4 threads, indexed     upserts ran 20.1 seconds, 67300 docs. Rate: 3348.2587064676613 ops.
+
+ *** Size 1000
+localhost:37017: 1 threads, not indexed inserts ran 20.021 seconds, 101000 docs. Rate: 5044.703061785125 ops.
+localhost:37017: 1 threads, not indexed upserts ran 20.023 seconds, 85200 docs. Rate: 4255.1066273785145 ops.
+localhost:37017: 1 threads, indexed     inserts ran 20.02 seconds, 91700 docs. Rate: 4580.419580419581 ops.
+localhost:37017: 1 threads, indexed     upserts ran 20.017 seconds, 56500 docs. Rate: 2822.6007893290703 ops.
+localhost:37017: 2 threads, not indexed inserts ran 20.017 seconds, 140492 docs. Rate: 7018.634160963182 ops.
+localhost:37017: 2 threads, not indexed upserts ran 20.025 seconds, 83600 docs. Rate: 4174.7815230961305 ops.
+localhost:37017: 2 threads, indexed     inserts ran 20.522 seconds, 70900 docs. Rate: 3454.828964038593 ops.
+localhost:37017: 2 threads, indexed     upserts ran 20.032 seconds, 62300 docs. Rate: 3110.0239616613417 ops.
+localhost:37017: 4 threads, not indexed inserts ran 20.049 seconds, 140600 docs. Rate: 7012.818594443614 ops.
+localhost:37017: 4 threads, not indexed upserts ran 20.078 seconds, 63800 docs. Rate: 3177.6073314075106 ops.
+localhost:37017: 4 threads, indexed     inserts ran 20.036 seconds, 91500 docs. Rate: 4566.77979636654 ops.
+localhost:37017: 4 threads, indexed     upserts ran 20.122 seconds, 61600 docs. Rate: 3061.3259119371833 ops.
+
+ *** Size 10240
+localhost:37017: 1 threads, not indexed inserts ran 28.279 seconds, 35689 docs. Rate: 1262.031896460271 ops.
+localhost:37017: 1 threads, not indexed upserts ran 20.042 seconds, 49985 docs. Rate: 2494.0125735954493 ops.
+localhost:37017: 1 threads, indexed     inserts ran 20.028 seconds, 54938 docs. Rate: 2743.059716397044 ops.
+localhost:37017: 1 threads, indexed     upserts ran 26.566 seconds, 13500 docs. Rate: 508.1683354663856 ops.
+localhost:37017: 2 threads, not indexed inserts ran 20.025 seconds, 65217 docs. Rate: 3256.779026217229 ops.
+localhost:37017: 2 threads, not indexed upserts ran 20.025 seconds, 54028 docs. Rate: 2698.0274656679153 ops.
+localhost:37017: 2 threads, indexed     inserts ran 20.012 seconds, 53963 docs. Rate: 2696.532080751549 ops.
+localhost:37017: 2 threads, indexed     upserts ran 36.373 seconds, 33931 docs. Rate: 932.8622879608502 ops.
+localhost:37017: 4 threads, not indexed inserts ran 20.043 seconds, 68982 docs. Rate: 3441.7003442598416 ops.
+localhost:37017: 4 threads, not indexed upserts ran 45.205 seconds, 53916 docs. Rate: 1192.6999225749364 ops.
+localhost:37017: 4 threads, indexed     inserts ran 20.032 seconds, 55063 docs. Rate: 2748.751996805112 ops.
+localhost:37017: 4 threads, indexed     upserts ran 34.602 seconds, 29524 docs. Rate: 853.2454771400498 ops.
+
+ *** Size 102400
+localhost:37017: 1 threads, not indexed inserts ran 20.008 seconds, 6090 docs. Rate: 304.3782487005198 ops.
+localhost:37017: 1 threads, not indexed upserts ran 20.11 seconds, 7260 docs. Rate: 361.0144206862258 ops.
+localhost:37017: 1 threads, indexed     inserts ran 24.69 seconds, 419 docs. Rate: 16.97043337383556 ops.
+localhost:37017: 1 threads, indexed     upserts ran 20.005 seconds, 6698 docs. Rate: 334.81629592601854 ops.
+localhost:37017: 2 threads, not indexed inserts ran 42.454 seconds, 7850 docs. Rate: 184.90601592311677 ops.
+localhost:37017: 2 threads, not indexed upserts ran 20.101 seconds, 9315 docs. Rate: 463.40978060793 ops.
+localhost:37017: 2 threads, indexed     inserts ran 44.3 seconds, 6188 docs. Rate: 139.68397291196388 ops.
+localhost:37017: 2 threads, indexed     upserts ran 20.047 seconds, 10220 docs. Rate: 509.8019653813538 ops.
+localhost:37017: 4 threads, not indexed inserts ran 43.127 seconds, 6493 docs. Rate: 150.55533656410137 ops.
+localhost:37017: 4 threads, not indexed upserts ran 20.036 seconds, 11558 docs. Rate: 576.8616490317428 ops.
+localhost:37017: 4 threads, indexed     inserts ran 44.358 seconds, 2944 docs. Rate: 66.36908787591867 ops.
+localhost:37017: 4 threads, indexed     upserts ran 20.225 seconds, 11804 docs. Rate: 583.6341161928306 ops.
+
+ *** Size 100
+localhost:37017: 1 threads, not indexed inserts ran 41.459 seconds, 2900 docs. Rate: 69.94862394172556 ops.
+localhost:37017: 1 threads, not indexed upserts ran 20.025 seconds, 47200 docs. Rate: 2357.0536828963795 ops.
+localhost:37017: 1 threads, indexed     inserts ran 20.023 seconds, 59200 docs. Rate: 2956.5999101033813 ops.
+localhost:37017: 1 threads, indexed     upserts ran 20.032 seconds, 45900 docs. Rate: 2291.3338658146963 ops.
+localhost:37017: 2 threads, not indexed inserts ran 20.149 seconds, 56000 docs. Rate: 2779.2942577795425 ops.
+localhost:37017: 2 threads, not indexed upserts ran 20.056 seconds, 45300 docs. Rate: 2258.6757080175507 ops.
+localhost:37017: 2 threads, indexed     inserts ran 20.037 seconds, 63500 docs. Rate: 3169.1370963717127 ops.
+localhost:37017: 2 threads, indexed     upserts ran 20.04 seconds, 43500 docs. Rate: 2170.6586826347307 ops.
+localhost:37017: 4 threads, not indexed inserts ran 20.034 seconds, 59400 docs. Rate: 2964.959568733154 ops.
+localhost:37017: 4 threads, not indexed upserts ran 20.06 seconds, 46500 docs. Rate: 2318.045862412762 ops.
+localhost:37017: 4 threads, indexed     inserts ran 20.069 seconds, 55600 docs. Rate: 2770.44197518561 ops.
+localhost:37017: 4 threads, indexed     upserts ran 20.05 seconds, 43200 docs. Rate: 2154.6134663341645 ops.
+
+ *** Size 1000
+localhost:37017: 1 threads, not indexed inserts ran 20.065 seconds, 54500 docs. Rate: 2716.1724395713927 ops.
+localhost:37017: 1 threads, not indexed upserts ran 21.757 seconds, 35800 docs. Rate: 1645.4474422025094 ops.
+localhost:37017: 1 threads, indexed     inserts ran 20.012 seconds, 53508 docs. Rate: 2673.79572256646 ops.
+localhost:37017: 1 threads, indexed     upserts ran 20.025 seconds, 41900 docs. Rate: 2092.384519350812 ops.
+localhost:37017: 2 threads, not indexed inserts ran 21.25 seconds, 40900 docs. Rate: 1924.7058823529412 ops.
+localhost:37017: 2 threads, not indexed upserts ran 20.1 seconds, 40000 docs. Rate: 1990.049751243781 ops.
+localhost:37017: 2 threads, indexed     inserts ran 20.128 seconds, 52200 docs. Rate: 2593.402225755167 ops.
+localhost:37017: 2 threads, indexed     upserts ran 20.047 seconds, 32400 docs. Rate: 1616.2019254751333 ops.
+localhost:37017: 4 threads, not indexed inserts ran 20.056 seconds, 52815 docs. Rate: 2633.376545672118 ops.
+localhost:37017: 4 threads, not indexed upserts ran 20.077 seconds, 40700 docs. Rate: 2027.195298102306 ops.
+localhost:37017: 4 threads, indexed     inserts ran 20.101 seconds, 39300 docs. Rate: 1955.1266106163873 ops.
+localhost:37017: 4 threads, indexed     upserts ran 20.397 seconds, 42500 docs. Rate: 2083.6397509437666 ops.
+
+ *** Size 10240
+localhost:37017: 1 threads, not indexed inserts ran 20.194 seconds, 7928 docs. Rate: 392.59185896801034 ops.
+localhost:37017: 1 threads, not indexed upserts ran 20.057 seconds, 1336 docs. Rate: 66.61016104103307 ops.
+localhost:37017: 1 threads, indexed     inserts ran 21.055 seconds, 494 docs. Rate: 23.4623604844455 ops.
+localhost:37017: 1 threads, indexed     upserts ran 20.025 seconds, 3415 docs. Rate: 170.53682896379527 ops.
+localhost:37017: 2 threads, not indexed inserts ran 20.013 seconds, 2902 docs. Rate: 145.00574626492778 ops.
+localhost:37017: 2 threads, not indexed upserts ran 20.032 seconds, 25916 docs. Rate: 1293.7300319488818 ops.
+localhost:37017: 2 threads, indexed     inserts ran 20.496 seconds, 27496 docs. Rate: 1341.5300546448088 ops.
+localhost:37017: 2 threads, indexed     upserts ran 37.071 seconds, 13991 docs. Rate: 377.41091419168623 ops.
+localhost:37017: 4 threads, not indexed inserts ran 20.028 seconds, 26169 docs. Rate: 1306.6207309766328 ops.
+localhost:37017: 4 threads, not indexed upserts ran 31.705 seconds, 17759 docs. Rate: 560.1324712190507 ops.
+localhost:37017: 4 threads, indexed     inserts ran 20.062 seconds, 26917 docs. Rate: 1341.6907586481905 ops.
+localhost:37017: 4 threads, indexed     upserts ran 20.681 seconds, 10186 docs. Rate: 492.52937478845314 ops.
+
+ *** Size 102400
+localhost:37017: 1 threads, not indexed inserts ran 63.834 seconds, 51 docs. Rate: 0.7989472694802142 ops.
+localhost:37017: 1 threads, not indexed upserts ran 20.12 seconds, 487 docs. Rate: 24.204771371769382 ops.
+localhost:37017: 1 threads, indexed     inserts ran 20.025 seconds, 3493 docs. Rate: 174.4319600499376 ops.
+localhost:37017: 1 threads, indexed     upserts ran 20.124 seconds, 3664 docs. Rate: 182.07115881534486 ops.
+localhost:37017: 2 threads, not indexed inserts ran 27.307 seconds, 58 docs. Rate: 2.1239975097960233 ops.
+localhost:37017: 2 threads, not indexed upserts ran 20.051 seconds, 3968 docs. Rate: 197.89536681462272 ops.
+localhost:37017: 2 threads, indexed     inserts ran 20.241 seconds, 1230 docs. Rate: 60.7677486290203 ops.
+localhost:37017: 2 threads, indexed     upserts ran 20.226 seconds, 480 docs. Rate: 23.73183031741323 ops.
+localhost:37017: 4 threads, not indexed inserts ran 20.607 seconds, 444 docs. Rate: 21.546076575920804 ops.
+localhost:37017: 4 threads, not indexed upserts ran 23.559 seconds, 454 docs. Rate: 19.270767010484317 ops.
+localhost:37017: 4 threads, indexed     inserts ran 20.381 seconds, 114 docs. Rate: 5.593444875128796 ops.
+localhost:37017: 4 threads, indexed     upserts ran 20.042 seconds, 1388 docs. Rate: 69.25456541263347 ops.
+metrics $ 
+metrics $ 
+metrics $ 
+metrics $ 
+metrics $ 
+metrics $ 
+metrics $ 
+metrics $ 
+metrics $ 
+metrics $ 
+metrics $ ./runtest -p 27017 insertVupsertFull.js
+port will be: 27017
+
+ *** Size 100
+20.023 seconds, 133500 docs. Rate: 6667.332567547321 ops.
+20.015 seconds, 127000 docs. Rate: 6345.241069198101 ops.
+20.012 seconds, 124800 docs. Rate: 6236.258245052968 ops.
+1	not inserts 	6236.258245052968,6345.241069198101,6667.332567547321sec 124800 docs. Rate: avg/med6416.277293932796	6345.241069198101
+20.019 seconds, 79300 docs. Rate: 3961.236825016235 ops.
+20.012 seconds, 83600 docs. Rate: 4177.493503897661 ops.
+20.012 seconds, 81000 docs. Rate: 4047.5714571257245 ops.
+1	not upserts 	3961.236825016235,4047.5714571257245,4177.493503897661sec 81000 docs. Rate: avg/med4062.1005953465406	4047.5714571257245
+20.006 seconds, 92200 docs. Rate: 4608.617414775567 ops.
+20.008 seconds, 89900 docs. Rate: 4493.202718912436 ops.
+20.013 seconds, 84700 docs. Rate: 4232.249038125218 ops.
+1	ind inserts 	4232.249038125218,4493.202718912436,4608.617414775567sec 84700 docs. Rate: avg/med4444.68972393774	4493.202718912436
+20.021 seconds, 60000 docs. Rate: 2996.8533040307675 ops.
+20.034 seconds, 65200 docs. Rate: 3254.467405410802 ops.
+20.018 seconds, 64700 docs. Rate: 3232.0911179938053 ops.
+1	ind upserts 	2996.8533040307675,3232.0911179938053,3254.467405410802sec 64700 docs. Rate: avg/med3161.137275811792	3232.0911179938053
+20.015 seconds, 151800 docs. Rate: 7584.311766175369 ops.
+20.032 seconds, 156800 docs. Rate: 7827.476038338658 ops.
+20.027 seconds, 151200 docs. Rate: 7549.807759524641 ops.
+2	not inserts 	7549.807759524641,7584.311766175369,7827.476038338658sec 151200 docs. Rate: avg/med7653.865188012889	7584.311766175369
+20.033 seconds, 84000 docs. Rate: 4193.081415664154 ops.
+20.055 seconds, 84300 docs. Rate: 4203.440538519073 ops.
+20.033 seconds, 86300 docs. Rate: 4307.891978235911 ops.
+2	not upserts 	4193.081415664154,4203.440538519073,4307.891978235911sec 86300 docs. Rate: avg/med4234.804644139713	4203.440538519073
+20.019 seconds, 103500 docs. Rate: 5170.088416004796 ops.
+20.046 seconds, 98600 docs. Rate: 4918.687019854336 ops.
+20.023 seconds, 103000 docs. Rate: 5144.084303051491 ops.
+2	ind inserts 	4918.687019854336,5144.084303051491,5170.088416004796sec 103000 docs. Rate: avg/med5077.619912970207	5144.084303051491
+20.043 seconds, 66800 docs. Rate: 3332.834406027042 ops.
+20.027 seconds, 65300 docs. Rate: 3260.5981924402054 ops.
+20.034 seconds, 67000 docs. Rate: 3344.314665069382 ops.
+2	ind upserts 	3260.5981924402054,3332.834406027042,3344.314665069382sec 67000 docs. Rate: avg/med3312.5824211788763	3332.834406027042
+20.024 seconds, 156200 docs. Rate: 7800.6392329204955 ops.
+^Cmetrics $ ./runtest -p 27017 insertVupsertFull.js
+port will be: 27017
+Wed Jan 23 23:21:56.853 compile error: insertVupsertFull.js:0 SyntaxError: Unexpected end of input
+
+
+
+failed to load: insertVupsertFull.js
+metrics $ ./runtest -p 27017 insertVupsertFull.js
+port will be: 27017
+
+ *** Size 100
+1	not inserts 	7056.119134476038,7309.1526778577145,7388.522295540892sec 147800 docs. Rate: avg/med725	7309
+1	not upserts 	4310.4740022975875,4334.133173365327,4393.68189543137sec 86700 docs. Rate: avg/med4346	4334
+^Cmetrics $ ./runtest -p 27017 insertVupsertFull.js
+port will be: 27017
+
+ *** Size 100
+1	not inserts 	7149.995,7306.712,7435.539sec 148800 docs. Rate: avg/med7297	7307
+^Cmetrics $ ./runtest -p 27017 insertVupsertFull.js ; ./runtest -p 37017 insertVupsertFull.js 
+port will be: 27017
+
+ *** Size 100
+1 thread 2 indexes inserts 	7120.372,7375.575,7535.479 150800 docs. Rate: avg/med    7344	7376
+1 thread 2 indexes upserts 	4502.299,4505.044,4523.417 90200 docs. Rate: avg/med    4510	4505
+1 thread 5 indexes inserts 	5277.361,5301.518,5368.389 107400 docs. Rate: avg/med    5316	5302
+1 thread 5 indexes upserts 	3464.803,3485.643,3489.128 69400 docs. Rate: avg/med    3480	3486
+2 thread 2 indexes inserts 	7933.653,8098.926,8117.159 162400 docs. Rate: avg/med    8050	8099
+2 thread 2 indexes upserts 	4370.629,4394.507,4451.098 89200 docs. Rate: avg/med    4405	4395
+2 thread 5 indexes inserts 	5138.833,5170.347,5213.483 102900 docs. Rate: avg/med    5174	5170
+2 thread 5 indexes upserts 	3340.157,3374.938,3457.054 67600 docs. Rate: avg/med    3391	3375
+4 thread 2 indexes inserts 	7722.239,7818.354,7927.316 154800 docs. Rate: avg/med    7823	7818
+4 thread 2 indexes upserts 	4314.038,4346.307,4410.517 87100 docs. Rate: avg/med    4357	4346
+4 thread 5 indexes inserts 	5050.908,5058.424,5146.765 101200 docs. Rate: avg/med    5085	5058
+4 thread 5 indexes upserts 	3305.085,3315.082,3353.932 66300 docs. Rate: avg/med    3325	3315
+
+ *** Size 1000
+1 thread 2 indexes inserts 	6660.671,6691.654,6779.038 135696 docs. Rate: avg/med    6710	6692
+1 thread 2 indexes upserts 	3988.205,4133.553,4157.09 83200 docs. Rate: avg/med    4093	4134
+1 thread 5 indexes inserts 	4502.749,4547.953,4627.686 92600 docs. Rate: avg/med    4559	4548
+1 thread 5 indexes upserts 	3041.047,3140.218,3146.225 63000 docs. Rate: avg/med    3109	3140
+2 thread 2 indexes inserts 	6964.428,7046.26,7156.055 143300 docs. Rate: avg/med    7056	7046
+2 thread 2 indexes upserts 	3930.301,3980.224,3985.417 79800 docs. Rate: avg/med    3965	3980
+2 thread 5 indexes inserts 	4500.05,4547.272,4560.147 90100 docs. Rate: avg/med    4536	4547
+2 thread 5 indexes upserts 	2955.567,3001.398,3007.594 60100 docs. Rate: avg/med    2988	3001
+4 thread 2 indexes inserts 	6630.386,6713.922,6746.567 135100 docs. Rate: avg/med    6697	6714
+4 thread 2 indexes upserts 	3864.758,3876.794,3920.687 77784 docs. Rate: avg/med    3887	3877
+4 thread 5 indexes inserts 	4365.811,4416.011,4436.69 88700 docs. Rate: avg/med    4406	4416
+4 thread 5 indexes upserts 	2930.038,2967.285,2985.52 59500 docs. Rate: avg/med    2961	2967
+
+ *** Size 10240
+1 thread 2 indexes inserts 	3009.936,3279.18,3606.745 72189 docs. Rate: avg/med    3299	3279
+1 thread 2 indexes upserts 	2359.056,2618.822,2721.664 52400 docs. Rate: avg/med    2567	2619
+1 thread 5 indexes inserts 	2187.703,2538.056,2601.768 52090 docs. Rate: avg/med    2443	2538
+1 thread 5 indexes upserts 	1736.608,1957.197,1979.911 39187 docs. Rate: avg/med    1891	1957
+2 thread 2 indexes inserts 	2976.922,3590.193,3648.082 71969 docs. Rate: avg/med    3405	3590
+2 thread 2 indexes upserts 	2253.535,2517.257,2536.956 50800 docs. Rate: avg/med    2436	2517
+2 thread 5 indexes inserts 	2266.337,2516.226,2559.66 50400 docs. Rate: avg/med    2447	2516
+2 thread 5 indexes upserts 	1755.779,1956.162,1969.496 39449 docs. Rate: avg/med    1894	1956
+4 thread 2 indexes inserts 	2963.678,3575.036,3621.794 71633 docs. Rate: avg/med    3387	3575
+-- This round took 23.43seconds
+4 thread 2 indexes upserts 	2188.135,2559.284,2619.382 51329 docs. Rate: avg/med    2456	2559
+4 thread 5 indexes inserts 	2267.016,2626.813,2631.846 53432 docs. Rate: avg/med    2509	2627
+4 thread 5 indexes upserts 	1822.633,1911.369,2010.695 40797 docs. Rate: avg/med    1915	1911
+
+ *** Size 102400
+1 thread 2 indexes inserts 	503.514,692.769,756.47 15140 docs. Rate: avg/med    651	693
+-- This round took 22.438seconds
+1 thread 2 indexes upserts 	444.826,696.661,738.12 13959 docs. Rate: avg/med    627	697
+-- This round took 21.902seconds
+1 thread 5 indexes inserts 	426.034,665.64,705.968 13621 docs. Rate: avg/med    599	666
+1 thread 5 indexes upserts 	449.148,609.19,636.228 12210 docs. Rate: avg/med    565	609
+2 thread 2 indexes inserts 	582.838,770.915,779.698 15426 docs. Rate: avg/med    711	771
+2 thread 2 indexes upserts 	488.707,650.523,693.903 13885 docs. Rate: avg/med    611	651
+2 thread 5 indexes inserts 	485.233,657.537,688.75 13848 docs. Rate: avg/med    611	658
+2 thread 5 indexes upserts 	425.116,600.556,608.365 12174 docs. Rate: avg/med    545	601
+4 thread 2 indexes inserts 	561.613,778.027,786.039 15742 docs. Rate: avg/med    709	778
+4 thread 2 indexes upserts 	452.045,680.795,688.72 14074 docs. Rate: avg/med    607	681
+4 thread 5 indexes inserts 	481.121,686.24,714.878 14129 docs. Rate: avg/med    627	686
+4 thread 5 indexes upserts 	441.947,625.056,634.675 12523 docs. Rate: avg/med    567	625
+
+ *** Size 100
+1 thread 2 indexes inserts 	1731.623,2345.309,2558.322 47000 docs. Rate: avg/med    2212	2345
+1 thread 2 indexes upserts 	1784.879,1834.588,1922.885 38500 docs. Rate: avg/med    1847	1835
+1 thread 5 indexes inserts 	2367.396,2441.338,2482.631 48900 docs. Rate: avg/med    2430	2441
+1 thread 5 indexes upserts 	1819.975,1853.61,1863.323 37300 docs. Rate: avg/med    1846	1854
+2 thread 2 indexes inserts 	2362.513,2380.6,2508.996 48300 docs. Rate: avg/med    2417	2381
+2 thread 2 indexes upserts 	1747.399,1797.035,1846.031 35100 docs. Rate: avg/med    1797	1797
+2 thread 5 indexes inserts 	2451.935,2456.297,2472.651 49100 docs. Rate: avg/med    2460	2456
+2 thread 5 indexes upserts 	1723.282,1807.831,1816.821 36200 docs. Rate: avg/med    1783	1808
+4 thread 2 indexes inserts 	2285.968,2382.134,2433.308 48000 docs. Rate: avg/med    2367	2382
+4 thread 2 indexes upserts 	1708.528,1723.022,1783.032 35100 docs. Rate: avg/med    1738	1723
+4 thread 5 indexes inserts 	2215.929,2317.122,2502.493 44600 docs. Rate: avg/med    2345	2317
+4 thread 5 indexes upserts 	1658.871,1717.337,1742.634 34400 docs. Rate: avg/med    1706	1717
+
+ *** Size 1000
+1 thread 2 indexes inserts 	2172.407,2248.876,2269.574 43900 docs. Rate: avg/med    2230	2249
+1 thread 2 indexes upserts 	1627.052,1648.599,1733.314 33000 docs. Rate: avg/med    1670	1649
+1 thread 5 indexes inserts 	1952.532,2025.658,2164.026 39900 docs. Rate: avg/med    2047	2026
+1 thread 5 indexes upserts 	1474.372,1504.549,1617.17 30100 docs. Rate: avg/med    1532	1505
+2 thread 2 indexes inserts 	1904.854,2010.299,2062.558 39600 docs. Rate: avg/med    1993	2010
+2 thread 2 indexes upserts 	1400.301,1480.418,1484.15 28800 docs. Rate: avg/med    1455	1480
+2 thread 5 indexes inserts 	1898.916,1973.812,1978.736 39600 docs. Rate: avg/med    1950	1974
+2 thread 5 indexes upserts 	1455.404,1467.212,1513.411 29143 docs. Rate: avg/med    1479	1467
+4 thread 2 indexes inserts 	1890.18,1903.48,1906.093 38180 docs. Rate: avg/med    1900	1903
+4 thread 2 indexes upserts 	1359.697,1440.463,1441.28 27300 docs. Rate: avg/med    1414	1440
+4 thread 5 indexes inserts 	2004.888,2364.747,2608.351 52600 docs. Rate: avg/med    2326	2365
+4 thread 5 indexes upserts 	1925.565,2020.152,2027.094 38700 docs. Rate: avg/med    1991	2020
+
+ *** Size 10240
+1 thread 2 indexes inserts 	1425.941,1481.781,1518.406 28573 docs. Rate: avg/med    1475	1482
+1 thread 2 indexes upserts 	1417.012,1417.944,932.299 18687 docs. Rate: avg/med    1256	1418
+1 thread 5 indexes inserts 	1337.878,1494.965,977.786 19587 docs. Rate: avg/med    1270	1495
+1 thread 5 indexes upserts 	708.159,916.883,957.437 14200 docs. Rate: avg/med    861	917
+2 thread 2 indexes inserts 	1016.776,1078.621,885.096 17863 docs. Rate: avg/med    993	1079
+-- This round took 21.023seconds
+2 thread 2 indexes upserts 	756.579,836.132,868.914 15668 docs. Rate: avg/med    821	836
+-- This round took 21.009seconds
+2 thread 5 indexes inserts 	1024.385,1051.692,790.044 15981 docs. Rate: avg/med    955	1052
+2 thread 5 indexes upserts 	694.274,824.049,884.425 14368 docs. Rate: avg/med    801	824
+4 thread 2 indexes inserts 	945.257,954.898,979.899 19063 docs. Rate: avg/med    960	955
+4 thread 2 indexes upserts 	1335.59,1397.468,993.778 19964 docs. Rate: avg/med    1242	1397
+-- This round took 25.607seconds
+4 thread 5 indexes inserts 	1090.795,1295.532,1507.246 26995 docs. Rate: avg/med    1298	1296
+4 thread 5 indexes upserts 	1018.085,1461.018,884.428 29365 docs. Rate: avg/med    1121	1461
+
+ *** Size 102400
+1 thread 2 indexes inserts 	189.433,203.531,334.031 4092 docs. Rate: avg/med    242	204
+1 thread 2 indexes upserts 	186.639,216.538,292.237 5850 docs. Rate: avg/med    232	217
+1 thread 5 indexes inserts 	139.54,213.608,282.745 4342 docs. Rate: avg/med    212	214
+1 thread 5 indexes upserts 	178.536,209.467,298.512 4213 docs. Rate: avg/med    229	209
+2 thread 2 indexes inserts 	195.234,223.787,325.146 6513 docs. Rate: avg/med    248	224
+2 thread 2 indexes upserts 	152.666,196.025,241.735 3935 docs. Rate: avg/med    197	196
+2 thread 5 indexes inserts 	199.462,207.755,308.898 4174 docs. Rate: avg/med    239	208
+2 thread 5 indexes upserts 	189.075,224.8,305.865 6128 docs. Rate: avg/med    240	225
+4 thread 2 indexes inserts 	132.801,237.314,239.624 4761 docs. Rate: avg/med    203	237
+4 thread 2 indexes upserts 	177.361,191.258,289.99 3855 docs. Rate: avg/med    220	191
+4 thread 5 indexes inserts 	211.285,216.504,293.749 5912 docs. Rate: avg/med    241	217
+4 thread 5 indexes upserts 	121.671,193.642,219.455 3886 docs. Rate: avg/med    178	194
+port will be: 37017
+
+ *** Size 100
+1 thread 2 indexes inserts 	5322.814,6517.83,6633.502 132743 docs. Rate: avg/med    6158	6518
+1 thread 2 indexes upserts 	3706.845,3735.704,3809.167 74300 docs. Rate: avg/med    3751	3736
+1 thread 5 indexes inserts 	4130.456,4272.31,4406.695 85600 docs. Rate: avg/med    4270	4272
+1 thread 5 indexes upserts 	2802.573,2865.845,2930.019 58700 docs. Rate: avg/med    2866	2866
+2 thread 2 indexes inserts 	6867.473,6876.061,7038.358 137700 docs. Rate: avg/med    6927	6876
+2 thread 2 indexes upserts 	3896.688,3939.56,4047.916 81100 docs. Rate: avg/med    3961	3940
+2 thread 5 indexes inserts 	4435.906,4505.133,4576.533 91700 docs. Rate: avg/med    4506	4505
+2 thread 5 indexes upserts 	2915.19,3023.79,3039.059 60500 docs. Rate: avg/med    2993	3024
+4 thread 2 indexes inserts 	6742.92,6795.39,7071.514 141600 docs. Rate: avg/med    6870	6795
+4 thread 2 indexes upserts 	3888.141,3959.551,4044.393 79389 docs. Rate: avg/med    3964	3960
+4 thread 5 indexes inserts 	4509.853,4549.532,4747.893 91300 docs. Rate: avg/med    4602	4550
+4 thread 5 indexes upserts 	2794.799,2841.786,2907.441 56100 docs. Rate: avg/med    2848	2842
+
+ *** Size 1000
+1 thread 2 indexes inserts 	5343.778,5904.981,6307.431 126300 docs. Rate: avg/med    5852	5905
+1 thread 2 indexes upserts 	3403.128,3873.609,3984.403 79704 docs. Rate: avg/med    3754	3874
+1 thread 5 indexes inserts 	3993.61,4296.348,4374.575 87544 docs. Rate: avg/med    4222	4296
+1 thread 5 indexes upserts 	2427.451,2938.384,2943.381 58900 docs. Rate: avg/med    2770	2938
+2 thread 2 indexes inserts 	6042.447,6453.083,6536.405 129152 docs. Rate: avg/med    6344	6453
+2 thread 2 indexes upserts 	3376.961,3680.767,3738.318 73700 docs. Rate: avg/med    3599	3681
+2 thread 5 indexes inserts 	3820.068,4140.032,4154.599 82900 docs. Rate: avg/med    4038	4140
+2 thread 5 indexes upserts 	2465.742,2674.356,2757.555 55300 docs. Rate: avg/med    2633	2674
+4 thread 2 indexes inserts 	5557.22,6062.572,6128.453 122900 docs. Rate: avg/med    5916	6063
+4 thread 2 indexes upserts 	3333.666,3540.308,3620.655 72500 docs. Rate: avg/med    3498	3540
+4 thread 5 indexes inserts 	3801.636,4096.241,4183.516 83800 docs. Rate: avg/med    4027	4096
+4 thread 5 indexes upserts 	2667.33,2896.819,2919.527 58200 docs. Rate: avg/med    2828	2897
+
+ *** Size 10240
+1 thread 2 indexes inserts 	1394.391,2670.994,3144.968 63000 docs. Rate: avg/med    2403	2671
+-- This round took 30.628seconds
+1 thread 2 indexes upserts 	2470.861,2618.56,901.136 49563 docs. Rate: avg/med    1997	2619
+1 thread 5 indexes inserts 	2498.627,2591.185,607.726 50055 docs. Rate: avg/med    1899	2591
+1 thread 5 indexes upserts 	1912.732,1947.76,844.704 16900 docs. Rate: avg/med    1568	1948
+-- This round took 24.034seconds
+2 thread 2 indexes inserts 	3238.215,3253.493,341.183 8200 docs. Rate: avg/med    2278	3253
+-- This round took 33.816seconds
+2 thread 2 indexes upserts 	1293.885,2412.043,2490.268 48470 docs. Rate: avg/med    2065	2412
+-- This round took 21.539seconds
+2 thread 5 indexes inserts 	2413.432,2520.296,370.676 48370 docs. Rate: avg/med    1768	2520
+2 thread 5 indexes upserts 	1858.054,1865.505,409.549 37568 docs. Rate: avg/med    1378	1866
+-- This round took 27.484seconds
+4 thread 2 indexes inserts 	135.715,3252.469,3289.761 65963 docs. Rate: avg/med    2226	3252
+-- This round took 36.281seconds
+-- This round took 33.271seconds
+4 thread 2 indexes upserts 	1061.161,1317.694,2415.411 43841 docs. Rate: avg/med    1598	1318
+-- This round took 21.258seconds
+4 thread 5 indexes inserts 	2470.732,2491.891,450.889 9585 docs. Rate: avg/med    1805	2492
+4 thread 5 indexes upserts 	1787.903,1887.992,680.063 13859 docs. Rate: avg/med    1452	1888
+
+ *** Size 102400
+-- This round took 41.485seconds
+1 thread 2 indexes inserts 	424.265,518.574,91.334 3789 docs. Rate: avg/med    345	519
+-- This round took 57.544seconds
+-- This round took 41.974seconds
+1 thread 2 indexes upserts 	192.357,23.824,587.178 1000 docs. Rate: avg/med    268	24
+-- This round took 62.004seconds
+-- This round took 58.916seconds
+-- This round took 60.56seconds
+1 thread 5 indexes inserts 	195.616,200.413,201.219 12137 docs. Rate: avg/med    199	200
+-- This round took 52.822seconds
+-- This round took 48.56seconds
+1 thread 5 indexes upserts 	195.581,598.795,66.371 3223 docs. Rate: avg/med    287	599
+-- This round took 53.935seconds
+-- This round took 46.55seconds
+2 thread 2 indexes inserts 	206.99,23.502,641.43 1094 docs. Rate: avg/med    291	24
+-- This round took 48.264seconds
+-- This round took 52.099seconds
+2 thread 2 indexes upserts 	202.18,659.269,93.361 4864 docs. Rate: avg/med    318	659
+-- This round took 45.228seconds
+-- This round took 55.063seconds
+2 thread 5 indexes inserts 	108.875,197.488,653.848 5995 docs. Rate: avg/med    320	197
+-- This round took 40.715seconds
+-- This round took 55.375seconds
+2 thread 5 indexes upserts 	134.664,191.502,613.549 7457 docs. Rate: avg/med    313	192
+-- This round took 61.317seconds
+-- This round took 65.286seconds
+-- This round took 41.489seconds
+4 thread 2 indexes inserts 	196.06,203.157,208.778 8662 docs. Rate: avg/med    203	203
+-- This round took 52.158seconds
+-- This round took 54.702seconds
+4 thread 2 indexes upserts 	123.95,194.746,607.792 10653 docs. Rate: avg/med    309	195
+-- This round took 47.384seconds
+-- This round took 51.904seconds
+4 thread 5 indexes inserts 	200.64,27.646,636.341 10414 docs. Rate: avg/med    288	28
+-- This round took 41.842seconds
+4 thread 5 indexes upserts 	45.409,546.251,599.341 12000 docs. Rate: avg/med    397	546
+
+ *** Size 100
+-- This round took 42.972seconds
+1 thread 2 indexes inserts 	2364.326,2429.028,32.579 48600 docs. Rate: avg/med    1609	2429
+1 thread 2 indexes upserts 	1706.857,1718.539,1734.133 34400 docs. Rate: avg/med    1720	1719
+1 thread 5 indexes inserts 	2292.393,2501.354,2563.462 51300 docs. Rate: avg/med    2452	2501
+1 thread 5 indexes upserts 	1653.182,1738.349,1764.647 34800 docs. Rate: avg/med    1719	1738
+2 thread 2 indexes inserts 	2134.591,2300.514,2411.292 46100 docs. Rate: avg/med    2282	2301
+2 thread 2 indexes upserts 	1575.228,1712.517,1733.613 34700 docs. Rate: avg/med    1674	1713
+2 thread 5 indexes inserts 	2101.384,2265.356,2282.809 45400 docs. Rate: avg/med    2217	2265
+2 thread 5 indexes upserts 	1298.766,1337.259,1358.277 26800 docs. Rate: avg/med    1331	1337
+4 thread 2 indexes inserts 	1940.202,1975.911,1985.075 39700 docs. Rate: avg/med    1967	1976
+4 thread 2 indexes upserts 	1268.269,1469.309,1487.063 30000 docs. Rate: avg/med    1408	1469
+4 thread 5 indexes inserts 	1737.663,1957.083,2121.408 42600 docs. Rate: avg/med    1939	1957
+4 thread 5 indexes upserts 	1577.664,1620.359,1676.688 34300 docs. Rate: avg/med    1625	1620
+
+ *** Size 1000
+1 thread 2 indexes inserts 	1913.947,2206.979,2218.115 44400 docs. Rate: avg/med    2113	2207
+1 thread 2 indexes upserts 	1263.644,1595.824,1652.439 33100 docs. Rate: avg/med    1504	1596
+1 thread 5 indexes inserts 	1858.699,2071.408,2105.42 42500 docs. Rate: avg/med    2012	2071
+1 thread 5 indexes upserts 	1209.093,1556.886,1621.19 31200 docs. Rate: avg/med    1462	1557
+2 thread 2 indexes inserts 	1623.62,1946.797,2190.619 43900 docs. Rate: avg/med    1920	1947
+2 thread 2 indexes upserts 	1264.241,1530.79,1666.949 30700 docs. Rate: avg/med    1487	1531
+2 thread 5 indexes inserts 	1580.601,1904.384,1988.575 39857 docs. Rate: avg/med    1825	1904
+2 thread 5 indexes upserts 	1043.852,1326.749,1417.873 26600 docs. Rate: avg/med    1263	1327
+4 thread 2 indexes inserts 	1546.568,1901.873,1912.853 38500 docs. Rate: avg/med    1787	1902
+4 thread 2 indexes upserts 	1076.384,1483.503,1634.606 32800 docs. Rate: avg/med    1398	1484
+4 thread 5 indexes inserts 	1685.118,2055.06,2148.513 44500 docs. Rate: avg/med    1963	2055
+4 thread 5 indexes upserts 	1365.426,1662.309,1728.553 33700 docs. Rate: avg/med    1585	1662
+
+ *** Size 10240
+1 thread 2 indexes inserts 	1069.571,1085.806,452.251 21800 docs. Rate: avg/med    869	1086
+-- This round took 21.244seconds
+1 thread 2 indexes upserts 	1005.689,1183.816,70.608 23700 docs. Rate: avg/med    753	1184
+-- This round took 26.248seconds
+1 thread 5 indexes inserts 	156.202,1570.459,1648.269 31483 docs. Rate: avg/med    1125	1570
+-- This round took 33.988seconds
+1 thread 5 indexes upserts 	1150.508,1291.875,579.616 23200 docs. Rate: avg/med    1007	1292
+2 thread 2 indexes inserts 	1097.779,1208.89,74.918 22095 docs. Rate: avg/med    794	1209
+-- This round took 34.504seconds
+2 thread 2 indexes upserts 	1031.803,125.797,497.565 17168 docs. Rate: avg/med    552	126
+-- This round took 21.788seconds
+2 thread 5 indexes inserts 	1039.087,1039.868,160.639 3500 docs. Rate: avg/med    747	1040
+-- This round took 25.403seconds
+2 thread 5 indexes upserts 	15.746,201.536,342.515 400 docs. Rate: avg/med    187	202
+-- This round took 21.737seconds
+4 thread 2 indexes inserts 	118.086,1183.982,165.524 23830 docs. Rate: avg/med    489	1184
+-- This round took 35.82seconds
+4 thread 2 indexes upserts 	1011.946,357.342,954.865 19696 docs. Rate: avg/med    775	357
+-- This round took 32.2seconds
+4 thread 5 indexes inserts 	1042.35,545.435,998.993 20827 docs. Rate: avg/med    862	545
+4 thread 5 indexes upserts 	138.517,879.764,945.666 19789 docs. Rate: avg/med    655	880
+
+ *** Size 102400
+1 thread 2 indexes inserts 	24.881,29.53,9.794 600 docs. Rate: avg/med    21	30
+1 thread 2 indexes upserts 	124.87,25.397,8.749 2530 docs. Rate: avg/med    53	25
+-- This round took 54.145seconds
+1 thread 5 indexes inserts 	113.193,214.453,67.596 3660 docs. Rate: avg/med    132	214
+1 thread 5 indexes upserts 	179.973,36.553,73.961 1498 docs. Rate: avg/med    97	37
+-- This round took 35.818seconds
+2 thread 2 indexes inserts 	13.764,31.145,32.383 633 docs. Rate: avg/med    26	31
+2 thread 2 indexes upserts 	212.855,229.029,63.024 4272 docs. Rate: avg/med    168	229
+-- This round took 46.209seconds
+2 thread 5 indexes inserts 	193.009,29.864,52.676 1058 docs. Rate: avg/med    92	30
+2 thread 5 indexes upserts 	24.143,35.629,83.427 496 docs. Rate: avg/med    48	36
+-- This round took 32.119seconds
+4 thread 2 indexes inserts 	10.056,217.919,25.412 4395 docs. Rate: avg/med    84	218
+-- This round took 43.739seconds
+4 thread 2 indexes upserts 	203.2,221.87,28.464 4089 docs. Rate: avg/med    151	222
+-- This round took 29.892seconds
+-- This round took 21.572seconds
+4 thread 5 indexes inserts 	22.251,50.586,89.288 480 docs. Rate: avg/med    54	51
+-- This round took 21.717seconds
+-- This round took 29.606seconds
+4 thread 5 indexes upserts 	12.531,20.215,24.018 371 docs. Rate: avg/med    19	20
