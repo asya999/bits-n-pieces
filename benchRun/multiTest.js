@@ -107,11 +107,13 @@ findOne100000 = { op : "findOne" ,
 
 // this is a way to run single ops.  
 // First argument is "seconds", second "threads", both optional
-// doOne(findOne100000,5,4)
-// doOne(findOne25000,5,4)
-// doOne(findOne10000,1,1)
+doOne(findOne100000,5,4)
+doOne(findOne25000,5,4)
+doOne(findOne10000,1,1)
 // test
-doOne(findOne1000,1,1);
+doOne(findOne1000,1,128);
 
 // operations, seconds, threads
-doMany(ops,1,4)
+doMany(ops,1,64)
+
+doAll(ops,20,32)
