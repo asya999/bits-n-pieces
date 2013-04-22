@@ -100,7 +100,7 @@ def main():
                 url = defectServiceClient.create_url(cid, projId,streamDefectId)
             else:
                 url = defectServiceClient.create_url(cid, projId)
-            body = body + "CID " + str(cid) + ": <a href " + url + ">" + url + "</a><br>\n"
+            body = body + "CID " + str(cid) + ": <a href=" + url + ">" + url + "</a><br>\n"
 
         body = body + "</html>"
         if options.testing == True:

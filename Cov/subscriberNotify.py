@@ -114,7 +114,7 @@ def main():
             body = body + "Component " + c + ":<br>\n"
             for cid in email_cid[u][c]:
                 U = url+str(cid)
-                body = body + "  CID " + str(cid) + ": <a href " + U + ">" + U + "</a><br>\n"
+                body = body + "  CID " + str(cid) + ": <a href=" + U + ">" + U + "</a><br>\n"
 
         body = body + "</html>"
         if options.testing == True:
