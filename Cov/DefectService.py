@@ -131,13 +131,14 @@ class DefectServiceClient(WebServiceClient):
             logging.warning("Need to add paging here!")
         return mergedDefectDOs
 
+    # probably should null out all scope settings
     def set_scope(self, project=None, stream=None):
         if stream:
-            scopePattern = '*/'+stream
+            scopePattern = None # '*/'+stream
         elif project:
-            scopePattern = project+'/*'
+            scopePattern = None # project+'/*'
         else:
-            scopePattern = '*/*'
+            scopePattern = None # '*/*'
         return scopePattern
 
     def get_md_history(self,cid,project=None,stream=None):
@@ -202,10 +203,10 @@ class DefectServiceClient(WebServiceClient):
 
     def set_stream_filter_spec(self, stream=None, details=False, project=None, scope=None):
         streamDefectFilterDO = self.client.factory.create('streamDefectFilterSpecDataObj')
-        if scope:
-            streamDefectFilterDO.scopePattern = scope
-        else:
-            streamDefectFilterDO.scopePattern = self.set_scope(project, stream)
+        # if scope:
+        #// streamDefectFilterDO.scopePattern = scope
+        # else:
+        #// streamDefectFilterDO.scopePattern = self.set_scope(project, stream)
         streamDefectFilterDO.includeDefectInstances = details
         streamDefectFilterDO.includeHistory = details
         return streamDefectFilterDO
@@ -231,7 +232,7 @@ class DefectServiceClient(WebServiceClient):
 
     # clears extref field for given cid, scope
     def remove_extref(self,cid,stream,extrefstr,project=None):
-        scopePattern = self.set_scope(project, stream)
+        scopePattern = None # self.set_scope(project, stream)
         defectStateSpecDO = self.client.factory.create('defectStateSpecDataObj')
         defectStateSpecDO.externalReference = ' '
         self.update_stream_defect(cid,scopePattern,defectStateSpecDO)
@@ -239,7 +240,7 @@ class DefectServiceClient(WebServiceClient):
     # sets defect occurrence property given key value pairs in given scope
     def set_defect_occurrences_property(self,cids,stream,prop_key,prop_value,project=None):
         streamDefectFilterDO = self.client.factory.create('streamDefectFilterSpecDataObj')
-        streamDefectFilterDO.scopePattern = self.set_scope(project, stream)
+        # streamDefectFilterDO.scopePattern = self.set_scope(project, stream)
         streamDefectFilterDO.includeDefectInstances = True
         streamDefectFilterDO.includeHistory = True
         SDs = self.client.service.getStreamDefects(cids,streamDefectFilterDO)
@@ -264,6 +265,7 @@ class DefectServiceClient(WebServiceClient):
 
     def print_stream_defect_brief(self,cids,streamIdDO,project=None):
         streamDefectFilterDO = self.set_stream_filter_spec(stream=streamIdDO.name,project=project, details=True)
+        logging.debug("Calling getStreamDefects with " + str(streamIdDO.name) + " and  cids " + str(cids))
         SDs = self.client.service.getStreamDefects(cids,streamDefectFilterDO)
         instances = []
         for sd in SDs:
