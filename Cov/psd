@@ -11,6 +11,8 @@ if sys.argv[1][-3:] == '.py':
 else:
    program = sys.argv[1]
 
+print program
+
 module=__import__(program)
 
 try:

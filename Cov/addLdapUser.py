@@ -14,51 +14,49 @@ def main():
     parser = wsOpts.get_common_opts()
 
     parser.add_option("--username",  dest="username",  help="Username")
-    parser.add_option("--first",  dest="first",  help="First name")
-    parser.add_option("--last",  dest="last",  help="Last Name")
-    parser.add_option("--email", dest="email",  help="Email")
-    parser.add_option("--group", dest="group",  help="Existing Group to add user to")
 
     (options, args) = parser.parse_args()
     wsOpts.setLogging(options.debug)
 
-    if wsOpts.checkRequiredMissing(options, ('username','email','group')):
+    if wsOpts.checkRequiredMissing(options, ('username',)):
         parser.print_help()
         sys.exit(-1)
 
     configServiceClient = ConfigServiceClient(options);
 
-    logging.debug("Creating local account " + options.username)
-    success = configServiceClient.create_user(options.username,options.first,options.last,options.email,'Administrators','xxxxxx',role=None, locked=True)
+    logging.debug("Creating LDAP account " + options.username)
+    success = configServiceClient.create_user(options.username,role=None, ldap=True)
+    successConvert=False
     if not success:
-        print "Error!"
-        sys.exit(1)
+        # assume the user exists as local user and switch to LDAP
+        successConvert=configServiceClient.convert_to_ldap_user(options.username)
+        if not successConvert:
+           print "Couldn't create and couldn't convert, sorry!"
+           sys.exit(1)
     subject = "Your Coverity account has been created"
+    userDO = configServiceClient.get_user(options.username)
+    url = "http://coverity.mongodb.com"
+    if successConvert: subject = "Your Coverity account has been converted to Crowd/Jira"
     text = """
        <html><pre>
           Dear %s,
           \n
           An account has been created for you at MongoDB Coverity Instance.
-          Your username is %s
-          You have been added to %s group
-          Please go to %s
-          and click on "Forgot Password?" link - this will allow you to set your password.
+          Your username is %s, same as your Crowd/Jira username.
+          You can go to <a href=%s>%s</a> to securely log in using your Crowd/Jira password.
           \n
           Your Coverity Admin Team
           \n
        </pre></html>
     """
     name = str(options.username)
-    if options.first:
-        name = str(options.first)
-    url = configServiceClient.create_url()
-    body = text % (name, options.username, options.group, url)
+    body = text % (name, options.username, url, url)
     try:
         configServiceClient.send_notifications(options.username, subject, body)
     except Exception, err:
         print "Error sending user notification", str(err)
         sys.exit(1)
-    print "Created user %s, added them to group %s, send notification" % (options.username, options.group)
+    print "Created user %s, sent notification" % (options.username)
 
 if __name__ == '__main__':
     main()

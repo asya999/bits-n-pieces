@@ -35,13 +35,13 @@ def main():
     cidlist = []
     for md in mdDOs:
         occurrences = defectServiceClient.get_stream_defect_occurrences(md.cid, options.stream)
-        logging.debug("CID %d, status %s, %d occurrences" % (md.cid, md.status, len(occurrences)))
-        cidlist.append((md.cid, md.classification, max(1,len(occurrences))))
+        logging.debug("CID %d, %s" % (md.cid, repr(md)))
+        cidlist.append((md.cid, max(1,len(occurrences))))
 
-    totals = sum(x[2] for x in cidlist)
+    totals = sum(x[1] for x in cidlist)
     print "Total occurrences:", totals
-    ones = len(set(y[0] for y in cidlist if y[2] == 1))
-    moreThanOne = ( (y[0],y[2]) for y in cidlist if y[2] > 1)
+    ones = len(set(y[0] for y in cidlist if y[1] == 1))
+    moreThanOne = ( (y[0],y[1]) for y in cidlist if y[1] > 1)
 
     print ones, " defects have one occurrence"
     if ones < totals:

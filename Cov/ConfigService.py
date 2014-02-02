@@ -8,7 +8,7 @@ import re
 # has methods to deal with users, roles, groups, etc.
 class ConfigServiceClient(WebServiceClient):
     def __init__(self, opt):
-        WebServiceClient.__init__(self, 'configuration', opt.host, opt.port, opt.user, opt.password, opt.secure)
+        WebServiceClient.__init__(self, 'configuration', opt.host, opt.port, opt.user, opt.password, opt.secure )
 
     def get_checker_prop(self, checker, subcat, domain, attribute=None):
         checkerPropFSDO = self.client.factory.create('checkerPropertyFilterSpecDataObj')
@@ -413,6 +413,33 @@ class ConfigServiceClient(WebServiceClient):
             return False
 
     # given username, email, update user's email.
+    def convert_to_ldap_user(self, username):
+        userDO = self.client.factory.create('userDataObj')
+        userOldDO = self.user_details(username)
+        if not userOldDO:
+            logging.error("No user found "+username)
+            return False
+
+        userSpecDO = self.client.factory.create('userSpecDataObj')
+
+        if userOldDO.local:
+            userSpecDO.local = False
+        else:
+            logging.warning("User already an LDAP user!")
+            return False
+
+        userSpecDO.username = userOldDO.username
+
+        try:
+            self.client.service.updateUser(username,userSpecDO)
+            logging.info("Updated user: " + username)
+            return True
+        except Exception, err:
+            logging.error("Error updating user:" + str(err))
+            return False
+
+
+    # given username, email, update user's email.
     def update_user(self, username, email=None, role=None):
         userDO = self.client.factory.create('userDataObj')
         userOldDO = self.user_details(username)
@@ -603,6 +630,7 @@ class ConfigServiceClient(WebServiceClient):
     # send notification via CIM to users with given subject and message
     def send_notifications(self, usernames, subject, message):
         notifyResponse = self.client.service.notify(usernames, subject, message)
+        logging.debug(repr(notifyResponse))
         return notifyResponse
 
     # new attributes, roles, etc.

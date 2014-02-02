@@ -53,13 +53,16 @@ def main():
     if totalFetched < 1:
         logging.info("No defects")
         sys.exit(totalFetched)
+    logging.info("Total fetched "+ repr(totalFetched))
     for md in mergedDefectDOs.mergedDefects:
-        defectChangeDataObj = defectServiceClient.get_md_history(md.cid,options.project,options.stream)
+        defectChangeDataObj = defectServiceClient.get_md_history(md.cid,streamIdDO)
         i = len(defectChangeDataObj)-1
         while i >= 0:
             if defectChangeDataObj[i].dateModified > cutoff and len(set(defectChangeDataObj[i].affectedStreams).difference(set(streamIdDO))) > 0:
-                if getattr(defectChangeDataObj[i],'ownerChange',None):
-                    new_owner = defectChangeDataObj[i].ownerChange.newValue
+                for fieldChangeDO in defectChangeDataObj[i].attributeChanges:
+                  if fieldChangeDO != None and fieldChangeDO.fieldName=='Owner': 
+                    logging.debug("defectChangeDataObj with new owner is "+ repr(defectChangeDataObj[i]))
+                    new_owner = fieldChangeDO.newValue
                     if new_owner not in email_cid:
                         email_cid[new_owner] = []
                     if md.cid not in email_cid[new_owner]:

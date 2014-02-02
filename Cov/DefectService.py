@@ -141,8 +141,10 @@ class DefectServiceClient(WebServiceClient):
             scopePattern = None # '*/*'
         return scopePattern
 
-    def get_md_history(self,cid,project=None,stream=None):
-        return self.client.service.getMergedDefectHistory(cid,self.set_scope(project,stream))
+    def get_md_history(self,cid,streamIdDO):
+        # return self.client.service.getMergedDefectHistory(cid,self.set_scope(project,stream))
+        # for v7 getting rid of scope
+        return self.client.service.getMergedDefectHistory(cid,streamIdDO)
 
     def get_cids_for_snapshot(self,snapshotIdDO):
         return self.client.service.getMergedDefectIdsForSnapshot(snapshotIdDO)

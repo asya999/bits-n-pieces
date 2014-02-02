@@ -19,7 +19,7 @@ import logging.handlers
 # -----------------------------------------------------------------------------
 # Base class for all the web service clients
 class WebServiceClient:
-    def __init__(self, webservice_type, host, port, user, password, secure=False, version='v5'):
+    def __init__(self, webservice_type, host, port, user, password, secure=False, version='v7'):
         if secure==True:
             self.url = 'https://' + host + ':' + port
         else:
