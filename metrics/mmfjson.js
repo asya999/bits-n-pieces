@@ -1,0 +1,10 @@
+{
+    nThreads:8,
+    fileSizeMB:2048,
+    sleepMicros:0,
+    mmf:true,
+    r:true,
+    w:true,
+    recSizeKB:10,
+    syncDelay:20
+}
