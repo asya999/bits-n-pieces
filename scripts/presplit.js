@@ -1,5 +1,5 @@
 var debug=true;
-var minchar=32;
+var minchar=48;
 var maxchar=122;
 /* converts v of type tp to number 
 hexString = yourNumber.toString(16);
@@ -49,6 +49,7 @@ convertBack = function( i, tp) {
              return i;
              break;
        case "string": 
+             /* probably want to do something more specific based on alphanumeric values */
              fi = Math.floor(i/10000)
              se = i-(fi*10000);
              if (debug) print("*** se is " + se);
