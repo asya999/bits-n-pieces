@@ -1,4 +1,4 @@
-function (d) {
+printChunkDetails = function (d) {
    var chunksize = db.getSiblingDB(d).getCollection('settings').findOne({_id:"chunksize"}).value;
    var numchunks = db.getSiblingDB(d).getCollection('chunks').count();
    var dbhashTime = db.getSiblingDB(d).runCommand({dbhash:1, collections: ["collections", "chunks"]}).timeMillis; 
