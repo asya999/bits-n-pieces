@@ -81,6 +81,13 @@ figureOutType = function( v ) {
 /* minv and maxv must be the same type and that type defines what shard keys will be */
 /* if you get it wrong you are screwed */
 presplit = function ( ns, minvalue, maxvalue) {
+    if (ns==undefined || ns=="usage") {
+         print("presplit(ns, minval, maxval) - Takes namespace and min and max values of the first field of the shard key,");
+         print("\t\t\t\t\tand creates splits to generate 4x as many chunks as shards and");
+         print("\t\t\t\t\tthen distributes them round-robin to every shard");
+         print("\t\t\t\t\tCollection must exist, be empty, be sharded and balancer must be off");
+         return;
+    }
     if( typeof(minvalue) != typeof(maxvalue) ) { 
        print("Whoa, the types of min and max must be the same and they are " + typeof(minvalue) + " and " + typeof(maxvalue) + "!");
        return;
