@@ -49,10 +49,12 @@ convertBack = function( i, tp) {
              return i;
              break;
        case "string": 
-             fi = Math.round(i/10000)
-             se = i-Math.round(fi*10000);
+             fi = Math.floor(i/10000)
+             se = i-(fi*10000);
              if (debug) print("*** se is " + se);
-             if (se>maxchar) se = maxchar;
+             if (se>maxchar) { 
+                  se = se-(Math.floor(se/maxchar)*maxchar)+minchar;
+             }
              if (se<minchar) se = minchar;
              v = String.fromCharCode(fi, se);
              if (debug) print("Convert " + v + " from " + i + " " + fi);
@@ -141,7 +143,6 @@ presplit = function ( ns, minvalue, maxvalue) {
     if (debug) print("Chunk, step, start, stop", nchunks, step, start, stop);
     for (i=start,s=0; i<stop; i+=step, s++) {
         key[P] = convertBack(i, tp);
-        /* key[P] = i; */
         toShard = shards[s%numShards];
         print("will be spliting at " + tojson(key) + " and moving to " + toShard);
         var res = sh.splitAt( ns, key );
