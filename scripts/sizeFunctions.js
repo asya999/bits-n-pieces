@@ -60,3 +60,34 @@ show_db_sizes = function (dbname) {
         printjson(stats);
         printjson(statsGB);
 }
+
+printCollStats = function (scale) {
+    if (arguments.length > 1) {
+        print("printCollectionStats() has a single optional argument (scale)");
+        return;
+    }
+    if (typeof scale != 'undefined') {
+        if(typeof scale != 'number') {
+            print("scale has to be a number >= 1");
+            return;
+        }
+        if (scale < 1) {
+            print("scale has to be >= 1");
+            return;
+        }
+    }
+    unit="  ";
+    if (scale==1024) unit="KB";
+    if (scale==1024*1024) unit="MB";
+    if (scale==1024*1024*1024) unit="GB";
+    var mydb = db;
+    db.getCollectionNames().forEach(
+        function(z) {
+            var stats=mydb.getCollection(z).stats(scale);
+            print( "ns: " + stats.ns + "\tcount: " + stats.count + "\t size: " + Math.round(stats.size) + unit);
+            print( "\t   avgObjSize: " + Math.round(stats.avgObjSize) + "\tstorageSize: " + stats.storageSize + unit + "\t padding: " + Math.round(100*stats.paddingFactor)/100 + unit);
+            print( "\t   numIndexes: " + stats.nindexes + "\tIndexSize: " + Math.round(stats.totalIndexSize) + unit );
+        }
+    );
+}
+
