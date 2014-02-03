@@ -101,6 +101,8 @@ wts = function (dbname, options) {
       if (verbose>0) {
           var cshs = chunks.distinct("shard",{ns:c._id});
           addl = "\tdata is located on " + cshs.length + " shards";
+          var bigs = chunks.count({ns:c._id, jumbo:true});
+          if (bigs > 0) addl += "\n\tWARNING: " + bigs + " jumbo chunks in collection " + c._id;
       }
       print("\t" + c._id + "\t\t" + tojson(c.key) + addl);
       if (verbose) {
@@ -206,7 +208,7 @@ wts = function (dbname, options) {
            });
        }
    }
-   if (mongos.count({mongosVersion:{$exists:false}})>0 && someHashed) {
+   if (mongos.count({mongoVersion:{$exists:false}})>0 && someHashed) {
        print("\nWARNING: Mongos of pre-2.4.0 version exist in mongos collection " 
                                + "\n\tand there are hash key sharded collections.");
        if (!verbose) print("\tUse verbose option to see when old mongos last checked in.");
