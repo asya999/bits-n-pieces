@@ -3,6 +3,87 @@ unagg = function(cursorOrResultDoc) {
    else return cursorOrResultDoc.toArray();
 }
 
+fmtAborted = function( changeDoc, printTime ) {
+    ret = "";
+    details = changeDoc.details
+    if (details.hasOwnProperty("step6 of 6")) ret += "\taborted in step 6";
+    else if (details.hasOwnProperty("step5 of 6")) ret += "\taborted in step 5";
+    else if (details.hasOwnProperty("step4 of 6")) ret += "\taborted in step 4";
+    else if (details.hasOwnProperty("step3 of 6")) ret += "\taborted in step 3";
+    else if (details.hasOwnProperty("step2 of 6")) ret += "\taborted in step 2";
+    else if (details.hasOwnProperty("step1 of 6")) ret += "\taborted in step 1";
+    if (printTime) ret += "\t" + changeDoc.time.toISOString();
+    return ret;
+}
+
+printAbortsInfo = function( chlog, ns ) {
+
+    var m1 = { $match: {"details.note": "aborted", "ns": ns}};
+    var p1 = { "$project" : {
+            "ns" : 1,
+            "what" : "$what",
+            "step1" : { "$ifNull" : [ "$details.step1 of 6", "$details.step1 of 5" ] },
+            "step2" : { "$ifNull" : [ "$details.step2 of 6", "$details.step2 of 5" ] },
+            "step3" : { "$ifNull" : [ "$details.step3 of 6", "$details.step3 of 5" ] },
+            "step4" : { "$ifNull" : [ "$details.step4 of 6", "$details.step4 of 5" ] },
+            "step5" : { "$ifNull" : [ "$details.step5 of 6", "$details.step5 of 5" ] },
+            "step6" : { "$ifNull" : [ "$details.step6 of 6", "$details.step6 of 5" ] } 
+            }
+    };
+    var p2 = { "$project" : {
+		"what" : 1,
+		"ns" : 1,
+		"step1" : 1,
+		"step2" : 1,
+		"step3" : 1,
+		"step4" : 1,
+		"step5" : 1,
+		"step6" : 1,
+		"steptime" : { 
+                "$add" : [ {"$ifNull": ["$step1", 0] }, {"$ifNull": ["$step2", 0] }, {"$ifNull": ["$step3", 0] },
+                            {"$ifNull": ["$step4", 0] }, {"$ifNull": ["$step5", 0] }, {"$ifNull": ["$step6", 0] } ] 
+                }
+            }
+    };
+
+    var grp1 = {"$group": {
+        _id : "$what" ,
+        count: { "$sum": 1 },
+        step1: { "$sum" : { "$cond" : [ { "$gte" : [ "$step1", 0 ] }, 1, 0 ] } },
+        step2: { "$sum" : { "$cond" : [ { "$gte" : [ "$step2", 0 ] }, 1, 0 ] } },
+        step3: { "$sum" : { "$cond" : [ { "$gte" : [ "$step3", 0 ] }, 1, 0 ] } },
+        step4: { "$sum" : { "$cond" : [ { "$gte" : [ "$step4", 0 ] }, 1, 0 ] } },
+        step5: { "$sum" : { "$cond" : [ { "$gte" : [ "$step5", 0 ] }, 1, 0 ] } },
+        step6: { "$sum" : { "$cond" : [ { "$gte" : [ "$step6", 0 ] }, 1, 0 ] } },
+        totalTime: { "$sum": "$steptime" }
+        }
+    };
+
+    r = chlog.aggregate(m1, p1, p2, grp1 );
+    result = unagg(r)
+    result.forEach( function (info) {
+        if (debug) print("***", tojson( info, false, true ) );
+        print("\t" + ns + ":\t" + info.count + " aborted migrations: " + info._id
+                + "\n\t    " + Math.round(info.totalTime / 1000) + " seconds (" 
+                + Math.round(info.totalTime / 1000 / 60) + " minutes) spent in aborted migrations" );
+
+        print("\t\t" + info.step6 + " migrations aborted in step 6");
+        nseen = info.step6;
+        print("\t\t" + (info.step5 - nseen) + " migrations aborted in step 5");
+        nseen += info.step5;
+        print("\t\t" + (info.step4 - nseen) + " migrations aborted in step 4");
+        nseen += info.step4;
+        print("\t\t" + (info.step3 - nseen) + " migrations aborted in step 3");
+        nseen += info.step3;
+        print("\t\t" + (info.step2 - nseen) + " migrations aborted in step 2");
+        nseen += info.step2;
+        print("\t\t" + (info.step1 - nseen) + " migrations aborted in step 1");
+    });
+
+
+}
+
+
 /* analyze changelog collection in config DB for recent activity */
 wts = function (dbname, options) {
    debug = false;
@@ -248,12 +329,23 @@ wts = function (dbname, options) {
                       + c.migrations + " successful migrations out of " 
                       + c.migrationAttempts +  " attempts.  " 
                       + c.migrationFailures + " failed.");
+      // Aborted moves info
+      printAbortsInfo(chlog, c._id);
+
       if (debug) print("*** nummoves details" +  nummoves +" "+ detailsNS);
       var moves = chlog.find({ns:c._id, what:"moveChunk.commit"},{time:1,details:1}).sort({time:1}).toArray();
       if (nummoves > moves.length) nlimit=Math.round(moves.length-1);
       else nlimit=nummoves/2;
+
+      var aborts = chlog.find({ns:c._id, what:"moveChunk.from", "details.note":"aborted"},{time:1,details:1}).sort({time:1}).toArray();
+      if (nummoves > aborts.length) alimit=Math.round(aborts.length-1);
+      else alimit=nummoves/2;
+
       if (debug) print("**** moves.length" + moves.length);
+      if (debug) print("**** aborts.length" + aborts.length);
+
       if ( detailsNS && detailsNS == c._id || verbose > 0) {
+         // successful migrations
          for ( m = 0; m < moves.length; m++ ) { 
             if (m==0) print("\tSuccessful migrations:");
             if (m==0) print("\t    earliest at: " + moves[m].time.toISOString() 
@@ -269,6 +361,20 @@ wts = function (dbname, options) {
                                     print("\t\t\t\t... " + (moves.length-nlimit*2-2) + " more");
             }
             if (m==moves.length-1) print("\t    latest   at: " + moves[m].time.toISOString()); 
+         }
+         // Unsuccessful migrations
+         for ( u = 0; u < aborts.length; u++ ) { 
+            if (u==0) print("\tAborted migrations:");
+            if (u==0) print("\t    earliest at: " + aborts[u].time.toISOString() );
+           
+            if ( verbose>1 ) {
+               if ( (u > 0 && u < alimit) || ( u > (aborts.length-nlimit) && u < aborts.length) ) {
+                   print( "\t" + fmtAborted( aborts[u] , withdate || verbose > 2) );
+               } else if ( u == alimit && nummoves < aborts.length ) 
+                                    print("\t\t\t\t... " + (aborts.length-nlimit*2-2) + " more");
+            }
+            
+            if (u==aborts.length-1) print("\t    latest   at: " + aborts[u].time.toISOString()); 
          }
       }
    });
