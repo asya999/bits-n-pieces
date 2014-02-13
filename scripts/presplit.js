@@ -1,11 +1,29 @@
 var debug=true;
 var minchar=48;
-var maxchar=122;
+var maxchar=122-13;
 /* converts v of type tp to number 
 hexString = yourNumber.toString(16);
 yourNumber = parseInt(hexString, 16);
 */
-
+mapNumToChar = function(n) {
+    if (n < 48) return String.fromCharCode(48);
+    if (n < 58) return String.fromCharCode(n);
+    if (n < 65) return String.fromCharCode(57);
+    if (n < 91) return String.fromCharCode(n-7);
+    if (n < 123) return String.fromCharCode(n-13);
+    print("WTF???   HOW DID I GET HERE???");
+}
+mapCharToNum = function(s) {
+    var c = s.charCodeAt(0);
+    if (c < 48) return 48;
+    if (c < 58) return c;
+    if (c < 65) return 57;
+    if (c < 91) return c-7;
+    if (c < 97) return 90-7;
+    if (c < 123) return c-13;
+    return(122-13);
+    print("WTF???   HOW DID I GET HERE???");
+}
 convertTo = function( v, tp) {
     var i=0;
     if (debug) print("*** tp in convertTo " + tp);
@@ -20,10 +38,12 @@ convertTo = function( v, tp) {
              return v;
              break;
        case "string": 
-             fi=v.charCodeAt(0);
-             se=v.charCodeAt(1);
+             // fi=v.charCodeAt(0);
+             // se=v.charCodeAt(1);
+             fi = mapCharToNum(v.slice(0,1));
+             se = mapCharToNum(v.slice(1,1));
              i = fi*10000+se;
-             if (debug) print("Convert " + v + " to " + i + " from " + fi + " " + se);
+             if (debug) print("Converted string " + v + " to " + i + " from " + fi + " " + se);
              break;
        case "ObjectId": 
              i = parseInt(v.valueOf().slice(0,8), 16);
@@ -57,8 +77,8 @@ convertBack = function( i, tp) {
                   se = se-(Math.floor(se/maxchar)*maxchar)+minchar;
              }
              if (se<minchar) se = minchar;
-             v = String.fromCharCode(fi, se);
-             if (debug) print("Convert " + v + " from " + i + " " + fi);
+             v = mapNumToChar(fi) + mapNumToChar(se);
+             if (debug) print("Converted back num " + i + " to " + v + ", " + fi + " " + se);
              break;
        case "ObjectId": 
              v = i.toString(16) + "0000000000000000";
@@ -102,7 +122,7 @@ presplit = function ( ns, minvalue, maxvalue) {
     maxv = convertTo(maxvalue, tp);
     if (tp=="string") {
        minchar = minvalue.charCodeAt(1);
-       maxchar = maxvalue.charCodeAt(1);
+       maxchar = maxvalue.charCodeAt(1)-13;
     }
     if (debug) print("After", minvalue, typeof(minvalue),typeof(maxvalue), "type saved is ", tp);
     cfg = db.getSiblingDB("config");
