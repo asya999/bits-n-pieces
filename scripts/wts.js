@@ -1,11 +1,8 @@
-unagg = function(cursorOrResultDoc) {
-   if (cursorOrResultDoc.hasOwnProperty("result")) return cursorOrResultDoc.result;
-   else return cursorOrResultDoc.toArray();
-}
+load(d+"aggutil.js");
 
 fmtAborted = function( changeDoc, printTime ) {
     ret = "";
-    details = changeDoc.details
+    details = changeDoc.details;
     if (details.hasOwnProperty("step6 of 6")) ret += "\taborted in step 6";
     else if (details.hasOwnProperty("step5 of 6")) ret += "\taborted in step 5";
     else if (details.hasOwnProperty("step4 of 6")) ret += "\taborted in step 4";
@@ -16,21 +13,38 @@ fmtAborted = function( changeDoc, printTime ) {
     return ret;
 }
 
-printAbortsInfo = function( chlog, ns ) {
+printDetailsInfo = function( chlog, ns ) {
 
-    var m1 = { $match: {"details.note": "aborted", "ns": ns}};
+    var m1 = { $match: {"what":"moveChunk.from","details.note": "aborted", "ns": ns}};
+    var m2 = { $match: {"what":"moveChunk.from","details.note": {$exists:false}, "ns": ns}};
     var p1 = { "$project" : {
             "ns" : 1,
-            "what" : "$what",
-            "step1" : { "$ifNull" : [ "$details.step1 of 6", "$details.step1 of 5" ] },
-            "step2" : { "$ifNull" : [ "$details.step2 of 6", "$details.step2 of 5" ] },
-            "step3" : { "$ifNull" : [ "$details.step3 of 6", "$details.step3 of 5" ] },
-            "step4" : { "$ifNull" : [ "$details.step4 of 6", "$details.step4 of 5" ] },
-            "step5" : { "$ifNull" : [ "$details.step5 of 6", "$details.step5 of 5" ] },
-            "step6" : { "$ifNull" : [ "$details.step6 of 6", "$details.step6 of 5" ] } 
+            "what" : 1,
+            "time" : 1,
+            "chunk" : { "mn" : {
+                                "$ifNull" : [
+                                        "$details.min",
+                                        "$details.before.min"
+                                ]
+                        },
+                        "mx" : {
+                                "$ifNull" : [
+                                        "$details.max",
+                                        "$details.before.max"
+                                ]
+                        }
+            },
+            "step1" : { "$ifNull" : [ "$details.step1 of 6", 0 ] },
+            "step2" : { "$ifNull" : [ "$details.step2 of 6", 0 ] },
+            "step3" : { "$ifNull" : [ "$details.step3 of 6", 0 ] },
+            "step4" : { "$ifNull" : [ "$details.step4 of 6", 0 ] },
+            "step5" : { "$ifNull" : [ "$details.step5 of 6", 0 ] },
+            "step6" : { "$ifNull" : [ "$details.step6 of 6", 0 ] } 
             }
     };
+
     var p2 = { "$project" : {
+                "chunk" : 1,
 		"what" : 1,
 		"ns" : 1,
 		"step1" : 1,
@@ -39,6 +53,8 @@ printAbortsInfo = function( chlog, ns ) {
 		"step4" : 1,
 		"step5" : 1,
 		"step6" : 1,
+		"time" : 1,
+                "highestStep":{$cond:["$step6",6,{$cond:["$step5",5,{$cond:["$step4",4,{$cond:["$step3",3,{$cond:["$step2",2,1]} ]} ]} ]} ]},
 		"steptime" : { 
                 "$add" : [ {"$ifNull": ["$step1", 0] }, {"$ifNull": ["$step2", 0] }, {"$ifNull": ["$step3", 0] },
                             {"$ifNull": ["$step4", 0] }, {"$ifNull": ["$step5", 0] }, {"$ifNull": ["$step6", 0] } ] 
@@ -47,42 +63,52 @@ printAbortsInfo = function( chlog, ns ) {
     };
 
     var grp1 = {"$group": {
-        _id : "$what" ,
+        _id : "$chunk" ,
         count: { "$sum": 1 },
-        step1: { "$sum" : { "$cond" : [ { "$gte" : [ "$step1", 0 ] }, 1, 0 ] } },
-        step2: { "$sum" : { "$cond" : [ { "$gte" : [ "$step2", 0 ] }, 1, 0 ] } },
-        step3: { "$sum" : { "$cond" : [ { "$gte" : [ "$step3", 0 ] }, 1, 0 ] } },
-        step4: { "$sum" : { "$cond" : [ { "$gte" : [ "$step4", 0 ] }, 1, 0 ] } },
-        step5: { "$sum" : { "$cond" : [ { "$gte" : [ "$step5", 0 ] }, 1, 0 ] } },
-        step6: { "$sum" : { "$cond" : [ { "$gte" : [ "$step6", 0 ] }, 1, 0 ] } },
+        highestStep:{$max:"$highestStep"},
+        fromTime: {$min:"$time"},
+        toTime: {$max:"$time"},
         totalTime: { "$sum": "$steptime" }
         }
     };
 
-    r = chlog.aggregate(m1, p1, p2, grp1 );
+    var grp2 = {"$group": { 
+        _id: null, 
+        totalStep1: {"$sum":"$step1"},
+        totalStep2: {$sum:"$step2"},
+        totalStep3: {$sum:"$step3"},
+        totalStep4: {$sum:"$step4"},
+        totalStep5: {$sum:"$step5"},
+        totalTime :  {"$sum" :"$totalTime"},
+        sum :  {"$sum" : "$count"},
+        totalChunks: {$sum:1},
+        totalMoves: {$sum:"$count"}
+    } };
+
+    var grp3 = {"$group": { 
+        _id: "$highestStep", 
+        sum: {$sum:1}
+    } };
+
+    r = chlog.aggregate(m1, p1, p2, grp1, grp2 );
     result = unagg(r)
-    result.forEach( function (info) {
-        if (debug) print("***", tojson( info, false, true ) );
-        print("\t" + ns + ":\t" + info.count + " aborted migrations: " + info._id
-                + "\n\t    " + Math.round(info.totalTime / 1000) + " seconds (" 
-                + Math.round(info.totalTime / 1000 / 60) + " minutes) spent in aborted migrations" );
+    if (result.length==0) return;
+    print("\t" + result[0].totalMoves + " aborted migrations: "  
+                + "\n\t\t" + Math.round(result[0].totalTime / 1000) + " seconds (" 
+                + Math.round(result[0].totalTime / 1000 / 60) + " minutes) total spent in aborted migrations" );
 
-        print("\t\t" + info.step6 + " migrations aborted in step 6");
-        nseen = info.step6;
-        print("\t\t" + (info.step5 - nseen) + " migrations aborted in step 5");
-        nseen += info.step5;
-        print("\t\t" + (info.step4 - nseen) + " migrations aborted in step 4");
-        nseen += info.step4;
-        print("\t\t" + (info.step3 - nseen) + " migrations aborted in step 3");
-        nseen += info.step3;
-        print("\t\t" + (info.step2 - nseen) + " migrations aborted in step 2");
-        nseen += info.step2;
-        print("\t\t" + (info.step1 - nseen) + " migrations aborted in step 1");
-    });
-
+    if (!detailsNS && verbose < 3) return;
+    totalChunks = result[0].totalChunks;
+    r = chlog.aggregate(m1, p1, p2, grp3, {$sort:{_id:1}} );
+    result = unagg(r)
+    for (i=0; i< result.length; i++) {
+        print("\t\t" + result[i].sum + " migrations failed in step " + result[i]._id);
+    }
+    print("\t" + totalChunks + " different chunks were involved in failed migrations.");
+    if (!detailsNS && verbose < 4) return;
+    print("Even more details can go here");
 
 }
-
 
 /* analyze changelog collection in config DB for recent activity */
 wts = function (dbname, options) {
@@ -115,13 +141,14 @@ wts = function (dbname, options) {
        verbose = options.verbose || 0;
        debug = options.debug || false;
        detailsNS = options.details || "";
-       nummoves = options.nummoves || (verbose ? verbose*50 : 20);
+       nummoves = options.nummoves || (verbose ? 50 : 20);
        withdate = options.withdate || false;
        grain = ( options.hour ? "hour" : ( options.day ? "day" : undefined ) );
        showSplits = options.splits || false;
        showMigrations = options.migrations || true;
    }
 
+   /* define variables for all config db collections */
    var chlog = db.getSiblingDB(dbname).getCollection("changelog");
    var chunks = db.getSiblingDB(dbname).getCollection("chunks");
    var shards = db.getSiblingDB(dbname).getCollection("shards");
@@ -140,74 +167,78 @@ wts = function (dbname, options) {
    if (t3==undefined) t3=0;
    var t4=locks.find({},{_id:0,when:1}).sort({when:-1}).limit(1).toArray()[0].when
    if (t4==undefined) t4=0;
+   var maxts = Math.max(t1,t2,t3,t4);
 
    /* ****   Basic intro section ****  */
-   var maxts = Math.max(t1,t2,t3,t4);
    print("\nConfig DB '" + dbname + "'.\nLast ts is \t" + (new Date(maxts)).toISOString());
    var shs = shards.count();
    print("\nThere are " + shs + " shards");
-   if (verbose>0) {
-      var reps = 0;
-      var tagged = 0;
-      shards.find().forEach(function(s) {  
+   var reps = 0;
+   var tagged = 0;
+   shards.find().forEach(function(s) {  
          if ( s.host.indexOf("/") > 0 ) reps += 1;
          if ( s.hasOwnProperty("tags") && s.tags.length > 0 ) tagged += 1;
-      });
-      print("\t" + reps + " out of " + shs + " shards are replica sets");
-      if ( tagged > 0 ) print("\t" + tagged + " of " + shs + " shards have tags set");
-      if (verbose) {
+   });
+   print("\t" + reps + " out of " + shs + " shards are replica sets");
+   if ( tagged > 0 ) print("\t" + (tagged==shs ? "all" : tagged + " of " + shs) + " shards have tags set");
+   if ( verbose > 0 ) {
           shards.find().forEach(function(s) {
-              print("\t  _id: " + s._id);
-              if (verbose>1) print("\t  host: " + s.host + "  ");
+              print("\t" + s._id + (verbose>0 ? ": \t" + s.host + "  " : " "));
           });
-      }
    }
 
    var shdbs = dbs.count({partitioned:true});
    if (shdbs == 0) { 
       print("\nNo DB is sharded");
       return;
-   } else if (shdbs == 1) print("One db is sharded");
+   } else if (shdbs == 1) print("\nOne db is sharded");
    else print("\n" + shdbs + " dbs are sharded");
    if (verbose>0) {
       dbs.find({partitioned:true}).forEach(function(d) { print("\t" + d._id + "\t has its primary on \t" + d.primary); });
    }
 
    /* ****   Sharded collections ****  */
-   var nss = colls.find({dropped:false}).toArray();
+   var nss = colls.find({dropped:false}).sort({_id:1}).toArray();
+   var droppednss = colls.find({dropped:true}).sort({_id:1}).toArray();
    var someHashed = false;
    print("\nSharded collections and their keys are:");
    nss.forEach(function(c) { 
       var addl="";
-      if (verbose>0) {
+      if (verbose > 0) {
           var cshs = chunks.distinct("shard",{ns:c._id});
           addl = "\tdata is located on " + cshs.length + " shards";
           var bigs = chunks.count({ns:c._id, jumbo:true});
-          if (bigs > 0) addl += "\n\tWARNING: " + bigs + " jumbo chunks in collection " + c._id;
+          if (bigs > 0) addl += "\n\t\tWARNING: " + bigs + " jumbo chunks in collection " + c._id;
       }
       print("\t" + c._id + "\t\t" + tojson(c.key) + addl);
-      if (verbose) {
+      if (verbose > 0) {
            for (f in c.key) {
                  if (c.key[f]=="hashed") {
                     print("\t\t" + c._id + "\t\t is using a hashed shard key.");
+                    if (f != "_id") print("\n\t\t\t\t\t" + "and it's not the _id field :( ");
                     someHashed = true;
                  }
                  break;
            }
       }
       if ( chunks.count({ ns:c._id }) == 0 ) {
-          print("\t\tWARNING: Collection " + c._id + " is sharded and not dropped, but has ZERO chunks recorded");
+          print("\t\t****WARNING: Collection " + c._id + " is sharded and not dropped, but has ZERO chunks recorded");
       }
    });
+   if (verbose > 0 && droppednss.length > 0) {
+       droppednss.forEach(function(c) { 
+       });
+   }
 
    /* ****   TAGS ****  */
    var ntags=tags.count();
    if (ntags > 0) {
       print("\nTag aware sharding is being used, " + ntags + " ranges are set.");
+      if (tagged == 0) print("\t\tWARNING: No shard had any tags associated with it!");
       if (verbose>0) {
           var ct = tags.distinct("ns");
           var nt = tags.distinct("tag");
-          print("\t" + ct.length + " collections are using " + nt.length + " tags.");
+          print("\t" + ct.length + " collection" + (ct.length>1 ? "s are":" is") + " using " + nt.length + " tags.");
       }
    }
 
@@ -281,18 +312,18 @@ wts = function (dbname, options) {
    ms = unagg(x);
    if (verbose) {
        print("\nMongos:")
-       print("\n\tThere are " + ms.length + " different versions of Mongos that have checked in.")
-       if (verbose>1) {
-           ms.forEach(function(mongos) {
-               print("\t\tVersion: " + mongos.mongosVersion + ", " 
-                      + mongos.count + " processes, last checkin: " + mongos.lastPing);
-           });
-       }
+       if (ms.length == 1) print("\n\tThere is " + ms.length + " version of Mongos that have checked in.")
+       else print("\n\tThere are " + ms.length + " different versions of Mongos that have checked in.")
+       ms.forEach(function(mongos) {
+           print("\t\tVersion: " + mongos.mongosVersion + ", " 
+                  + mongos.count + " processes, last checkin: " + mongos.lastPing);
+       });
    }
    if (mongos.count({mongoVersion:{$exists:false}})>0 && someHashed) {
-       print("\nWARNING: Mongos of pre-2.4.0 version exist in mongos collection " 
+       print("\nALERT!!!  **** WARNING: Mongos of pre-2.4.0 version exist in mongos collection " 
                                + "\n\tand there are hash key sharded collections.");
        if (!verbose) print("\tUse verbose option to see when old mongos last checked in.");
+       else print("\tCheck to see when most recent checkin of old mongos was!");
    }
 
    /* ****  Changelog  ****  */
@@ -304,18 +335,19 @@ wts = function (dbname, options) {
 
    print("\nActivity details:");
    /* overall breakdown in changelog */
-   var y = chlog.aggregate( {$group: { _id:null, 
+   var y = chlog.aggregate( {$sort:{ns:1,time:1}},
+         {$group: { _id:null, 
              collections: {$addToSet:"$ns"},
              splits:{$sum:{$cond:[{$eq:["$what","split"]},1,0]}},
              migrationAttempts:{$sum:{$cond:[{$eq:["$what","moveChunk.start"]},1,0]}},
              migrations:{$sum:{$cond:[{$eq:["$what","moveChunk.commit"]},1,0]}}
       } });
    x = unagg(y);
-   print("\n" + x[0].collections.length + " collections had activity in the 'changelog'. ");
+   print("\n" + x[0].collections.length + " collection(s) had activity in the 'changelog'. ");
    print("\t" + x[0].splits + " splits, " 
                  + x[0].migrations + " successful migrations, out of " 
                  + x[0].migrationAttempts + " attempts.\n");
-   /* for each collection, find what's been going on in the changelog */
+   /* for each collection in changelog, find what's been going on with it */
    var z=chlog.aggregate(
       {$group: {_id:"$ns",
              splits:{$sum:{$cond:[{$eq:["$what","split"]},1,0]}},
@@ -324,13 +356,12 @@ wts = function (dbname, options) {
              migrations:{$sum:{$cond:[{$eq:["$what","moveChunk.commit"]},1,0]}}
       } });
    res = unagg(z);
+   /* for each namespace */
    res.forEach(function(c) { 
-      print("\t" + c._id + ": \t" + c.splits + " splits; \t" 
-                      + c.migrations + " successful migrations out of " 
-                      + c.migrationAttempts +  " attempts.  " 
-                      + c.migrationFailures + " failed.");
-      // Aborted moves info
-      printAbortsInfo(chlog, c._id);
+      print("\n" + c._id + ": \t" + (c.splits ? c.splits : "NO") + " splits; \t" 
+                      + (c.migrations ? c.migrations : "NO" ) + " successful migrations out of " 
+                      + (c.migrationAttempts ? c.migrationAttempts : "NO" ) +  " attempts.  " 
+                      + (c.migrationFailures ? c.migrationFailures : "NONE" ) + " failed.");
 
       if (debug) print("*** nummoves details" +  nummoves +" "+ detailsNS);
       var moves = chlog.find({ns:c._id, what:"moveChunk.commit"},{time:1,details:1}).sort({time:1}).toArray();
@@ -349,7 +380,7 @@ wts = function (dbname, options) {
          for ( m = 0; m < moves.length; m++ ) { 
             if (m==0) print("\tSuccessful migrations:");
             if (m==0) print("\t    earliest at: " + moves[m].time.toISOString() 
-                       + "\n\t\tfrom  " + moves[m].details.from + "\t to " + moves[m].details.to);
+                       + (verbose>1? "\n\t\tfrom  " + moves[m].details.from + "\t to " + moves[m].details.to : ""));
             if ( verbose>1 ) {
                if ( (m > 0 && m < nlimit) || ( m > (moves.length-nlimit) && m< moves.length) ) {
                    if (withdate || verbose>2) print("\t\tfrom  "
@@ -369,14 +400,16 @@ wts = function (dbname, options) {
            
             if ( verbose>1 ) {
                if ( (u > 0 && u < alimit) || ( u > (aborts.length-nlimit) && u < aborts.length) ) {
-                   print( "\t" + fmtAborted( aborts[u] , withdate || verbose > 2) );
-               } else if ( u == alimit && nummoves < aborts.length ) 
-                                    print("\t\t\t\t... " + (aborts.length-nlimit*2-2) + " more");
+                   print( "\t" + fmtAborted( aborts[u] , withdate || verbose > 1) );
+               } else if ( u == alimit && nummoves < aborts.length ) {
+                   print("\t\t\t\t... " + (aborts.length-nlimit*2-2) + " more");
+               }
             }
-            
             if (u==aborts.length-1) print("\t    latest   at: " + aborts[u].time.toISOString()); 
          }
+         printDetailsInfo(chlog, c._id);
       }
+
    });
    
    /* ****  Chunk sequences  ****  */
@@ -390,7 +423,7 @@ wts = function (dbname, options) {
       print("\t" + NS + ":  ");
       var cl=colls.findOne({_id:NS, dropped:false});
       if (cl == null) {
-          print("WARNING: didn't find collection " + NS);
+          print("ERROR!!! ERROR!!! didn't find collection " + NS);
           return;
       }
       for (f in cl.key) {
@@ -409,14 +442,14 @@ wts = function (dbname, options) {
       current = chunks.find({ns:NS},{shard:1}).sort({min:1}).limit(1).toArray()[0].shard;
       maxs = chunks.find({ns:NS},{shard:1}).sort({min:-1}).limit(1).toArray()[0]._id;
       chunks.find({ns:NS},{shard:1}).sort({_id:1}).forEach(function(c) {
-          if (maxs == c._id) isLast="***";
+          if (maxs == c._id) isLast=" <--max chunk here";
           if (c.shard==current) {
              count++;   
           } else {
              if (count > seqThreshold) {
                   grandTotal+=1;
                   if (verbose > 1) 
-                      print("\t\t\t"+count+" sequential chunk ranges on shard "+current + isLast);
+                      print("\t\t"+count+" sequential chunk ranges on shard "+current + isLast);
              }
              count=1;
              isLast="";
@@ -427,7 +460,7 @@ wts = function (dbname, options) {
       if (debug) print ("***" + " " + maxs);
       if (count > seqThreshold) { 
           if (verbose > 1) 
-              print("\t\t\t" + count + " sequential chunks on shard " 
+              print("\t\t" + count + " sequential chunks on shard " 
                               + current + isLast);
           grandTotal+=1;
       }
