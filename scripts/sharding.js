@@ -1,4 +1,4 @@
-var d="/Users/asya13/10gen/bits-n-pieces/scripts/";
+var d=githubdir+githubrepo;
 load(d+"wts.js");
 load(d+"presplit.js");
 load(d+"printChunkDetails.js");
