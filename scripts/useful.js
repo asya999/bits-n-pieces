@@ -1,3 +1,7 @@
+shortDate = function (dt) {
+    return dt.getFullYear()+"/"+(dt.getMonth()+1)+"/"+dt.getDate()+" "+dt.getHours()+":"+dt.getMinutes()+":"+dt.getSeconds();
+}
+
 finddb = function (str) { 
        var dbs=[]; 
        db.getMongo().getDBs().databases.forEach(function(d) { 
