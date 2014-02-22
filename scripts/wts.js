@@ -1,5 +1,13 @@
 load(d+"aggutil.js");
 
+shortDate = function (dt) {
+    cmin = ""+dt.getUTCMinutes(); 
+    csec = ""+dt.getUTCSeconds();
+    if (cmin.length==1) cmin="0"+cmin;
+    if (csec.length==1) csec="0"+csec;
+    return dt.getUTCFullYear() + "/" + (dt.getUTCMonth()+1) + "/" + dt.getUTCDate()+" "+dt.getUTCHours() + ":" + cmin + ":" + csec;
+}
+
 fmtAborted = function( changeDoc, printTime ) {
     ret = "";
     details = changeDoc.details;
@@ -13,10 +21,10 @@ fmtAborted = function( changeDoc, printTime ) {
     return ret;
 }
 
-printDetailsInfo = function( chlog, ns ) {
+printDetailsInfo = function( chlog, ns, successful ) {
 
-    var m1 = { $match: {"what":"moveChunk.from","details.note": "aborted", "ns": ns}};
-    var m2 = { $match: {"what":"moveChunk.from","details.note": {$exists:false}, "ns": ns}};
+    if (successful) m1 = { $match: {"what":"moveChunk.from","details.note": {$exists:false}, "ns": ns}};
+    else            m1 = { $match: {"what":"moveChunk.from","details.note": "aborted", "ns": ns}};
     var p1 = { "$project" : {
             "ns" : 1,
             "what" : 1,
@@ -80,7 +88,6 @@ printDetailsInfo = function( chlog, ns ) {
         totalStep4: {$sum:"$step4"},
         totalStep5: {$sum:"$step5"},
         totalTime :  {"$sum" :"$totalTime"},
-        sum :  {"$sum" : "$count"},
         totalChunks: {$sum:1},
         totalMoves: {$sum:"$count"}
     } };
@@ -93,21 +100,41 @@ printDetailsInfo = function( chlog, ns ) {
     r = chlog.aggregate(m1, p1, p2, grp1, grp2 );
     result = unagg(r)
     if (result.length==0) return;
-    print("\t" + result[0].totalMoves + " aborted migrations: "  
-                + "\n\t\t" + Math.round(result[0].totalTime / 1000) + " seconds (" 
-                + Math.round(result[0].totalTime / 1000 / 60) + " minutes) total spent in aborted migrations" );
+    totTimeSec = Math.round(result[0].totalTime/1000);
+    totTimeMin = Math.round(result[0].totalTime/1000/60);
+    totTimeHrs = (result[0].totalTime/1000/60/60).toFixed(2);
+    print("\t" + result[0].totalMoves + (successful ? " successful" : " aborted") + " migrations: "
+                + "\n\t\t" + totTimeSec + " seconds (" 
+                + totTimeMin + " minutes "
+                + (totTimeMin > 119 ? "/ " + totTimeHrs + " hours " : "")
+                + ") total spent in " + (successful ? "successful" : "aborted") +" migrations, averaging " 
+                + (totTimeSec/result[0].totalMoves).toFixed(2) + " seconds per migration" + (successful ? "." : " attempt."));
 
     if (!detailsNS && verbose < 3) return;
     totalChunks = result[0].totalChunks;
-    r = chlog.aggregate(m1, p1, p2, grp3, {$sort:{_id:1}} );
-    result = unagg(r)
-    for (i=0; i< result.length; i++) {
-        print("\t\t" + result[i].sum + " migrations failed in step " + result[i]._id);
+    if (!successful) {
+        r = chlog.aggregate(m1, p1, p2, grp3, {$sort:{_id:1}} );
+        result = unagg(r)
+        for (i=0; i< result.length; i++) {
+            print("\t\t" + result[i].sum + " migrations failed in step " + result[i]._id);
+        }
     }
-    print("\t" + totalChunks + " different chunks were involved in failed migrations.");
+    print("\t" + totalChunks + " different chunks were involved in " + (successful ? " completed" : " failed")    + " migrations.");
     if (!detailsNS && verbose < 4) return;
-    print("Even more details can go here");
-
+    if (successful) return;
+    print("\n\t\t--- Details on chunks that failed more than once!---");
+    r = chlog.aggregate(m1, p1, p2, grp1, {$sort:{count:1}} );
+    result = unagg(r)
+    result.forEach(function(ch) { 
+        if (Math.round(ch.totalTime/1000)==0) return;
+        if (ch.count==1) {
+            if (verbose > 4) print("Chunk " + tojson(ch._id.mn) + "-" + tojson(ch._id.mx) + " failed in step " + ch.highestStep + " (" + Math.round(ch.totalTime/1000) + "sec)");
+            return;
+        }
+        print("Chunk " + ( verbose > 4 ? tojson(ch._id.mn) + "-" + tojson(ch._id.mx) + "\n\t\t" : "")
+                 + "failed " + ch.count + " times (" + Math.round(ch.totalTime/1000) + " sec total)" + " getting to step " + ch.highestStep 
+                 + " from " + shortDate(ch.fromTime) + " till " + shortDate(ch.toTime));
+    })
 }
 
 /* analyze changelog collection in config DB for recent activity */
@@ -339,14 +366,14 @@ wts = function (dbname, options) {
          {$group: { _id:null, 
              collections: {$addToSet:"$ns"},
              splits:{$sum:{$cond:[{$eq:["$what","split"]},1,0]}},
-             migrationAttempts:{$sum:{$cond:[{$eq:["$what","moveChunk.start"]},1,0]}},
+             migrationAttempts:{$sum:{$cond:[{$eq:["$what","moveChunk.from"]},1,0]}},
              migrations:{$sum:{$cond:[{$eq:["$what","moveChunk.commit"]},1,0]}}
       } });
    x = unagg(y);
-   print("\n" + x[0].collections.length + " collection(s) had activity in the 'changelog'. ");
+   print("\n" + x[0].collections.length + " collection(s) had activity in the 'changelog': ");
    print("\t" + x[0].splits + " splits, " 
                  + x[0].migrations + " successful migrations, out of " 
-                 + x[0].migrationAttempts + " attempts.\n");
+                 + x[0].migrationAttempts + " attempts total.\n");
    /* for each collection in changelog, find what's been going on with it */
    var z=chlog.aggregate(
       {$group: {_id:"$ns",
@@ -378,7 +405,7 @@ wts = function (dbname, options) {
       if ( detailsNS && detailsNS == c._id || verbose > 0) {
          // successful migrations
          for ( m = 0; m < moves.length; m++ ) { 
-            if (m==0) print("\tSuccessful migrations:");
+            if (m==0) print("\n\tSuccessful migrations:");
             if (m==0) print("\t    earliest at: " + moves[m].time.toISOString() 
                        + (verbose>1? "\n\t\tfrom  " + moves[m].details.from + "\t to " + moves[m].details.to : ""));
             if ( verbose>1 ) {
@@ -393,21 +420,22 @@ wts = function (dbname, options) {
             }
             if (m==moves.length-1) print("\t    latest   at: " + moves[m].time.toISOString()); 
          }
+         printDetailsInfo(chlog, c._id, true);
          // Unsuccessful migrations
          for ( u = 0; u < aborts.length; u++ ) { 
-            if (u==0) print("\tAborted migrations:");
+            if (u==0) print("\n\tAborted migrations:");
             if (u==0) print("\t    earliest at: " + aborts[u].time.toISOString() );
            
             if ( verbose>1 ) {
                if ( (u > 0 && u < alimit) || ( u > (aborts.length-nlimit) && u < aborts.length) ) {
-                   print( "\t" + fmtAborted( aborts[u] , withdate || verbose > 1) );
+                   print( "\t" + fmtAborted( aborts[u] , true) );
                } else if ( u == alimit && nummoves < aborts.length ) {
                    print("\t\t\t\t... " + (aborts.length-nlimit*2-2) + " more");
                }
             }
             if (u==aborts.length-1) print("\t    latest   at: " + aborts[u].time.toISOString()); 
          }
-         printDetailsInfo(chlog, c._id);
+         printDetailsInfo(chlog, c._id, false);
       }
 
    });
@@ -429,8 +457,8 @@ wts = function (dbname, options) {
       for (f in cl.key) {
           if (cl.key[f]=="hashed") {
                print("\t\t" + cl._id + "\t\t is using a hashed shard key.");
-               continue;
-          } 
+               return;
+          } else continue;
       }
       divFactor = shs * ( !verbose ? 10 : (verbose==1 ? 20 : 100 ) )   /* to get 1% 5% or 10% of */
       seqThreshold = Math.max(Math.round(chunks.count({ns:NS})/divFactor),10);  /* numChunks div by numShards */
