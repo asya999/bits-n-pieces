@@ -238,18 +238,32 @@ wts = function (dbname, options) {
           if (bigs > 0) addl += "\n\t\tWARNING: " + bigs + " jumbo chunks in collection " + c._id;
       }
       print("\t" + c._id + "\t\t" + tojson(c.key) + addl);
-      if (verbose > 0) {
-           for (f in c.key) {
-                 if (c.key[f]=="hashed") {
+      isHashed = false;
+      for (f in c.key) {
+           if (c.key[f]=="hashed") {
+                 if (verbose > 0) {
                     print("\t\t" + c._id + "\t\t is using a hashed shard key.");
                     if (f != "_id") print("\n\t\t\t\t\t" + "and it's not the _id field :( ");
-                    someHashed = true;
                  }
+                 someHashed = true;
+                 isHashed = true;
                  break;
            }
       }
       if ( chunks.count({ ns:c._id }) == 0 ) {
           print("\t\t****WARNING: Collection " + c._id + " is sharded and not dropped, but has ZERO chunks recorded");
+      }
+      
+      if ( isHashed ) { /* && (detailsNS && detailsNS == c._id || verbose > 0)) */
+          print("Collection " + c._id + " uses a hashed shard key.");
+          /* check the chunk ranges */
+          var ch=chunks.find({ns:c._id}).sort({min:1});
+          var prev = {_id:MinKey}
+          ch.forEach(function(chunk) { 
+              if (tojson(chunk.min) != tojson(prev)) 
+                   print("\n\t\t\t\t!!!***ALERT***!!!! " + chunk._id + " has a non-adjacent range!!! \n\t\t Chunk min is " + tojson(chunk.min) + " but previous chunk Max was " + tojson(prev) + "   !!!!!ALERT!!!!\n\n" ); 
+              prev=chunk.max; 
+          });
       }
    });
    if (verbose > 0 && droppednss.length > 0) {
@@ -362,7 +376,7 @@ wts = function (dbname, options) {
 
    print("\nActivity details:");
    /* overall breakdown in changelog */
-   var y = chlog.aggregate( {$sort:{ns:1,time:1}},
+   var y = chlog.aggregate( {$sort:{ns:1,time:1}}, {$match:{ns:{$not:/^config/}}}, {$match:{ns:{$ne:""}}},
          {$group: { _id:null, 
              collections: {$addToSet:"$ns"},
              splits:{$sum:{$cond:[{$eq:["$what","split"]},1,0]}},
@@ -375,7 +389,7 @@ wts = function (dbname, options) {
                  + x[0].migrations + " successful migrations, out of " 
                  + x[0].migrationAttempts + " attempts total.\n");
    /* for each collection in changelog, find what's been going on with it */
-   var z=chlog.aggregate(
+   var z=chlog.aggregate({$match:{ns:{$not:/^config/}}}, {$match:{ns:{$ne:""}}},
       {$group: {_id:"$ns",
              splits:{$sum:{$cond:[{$eq:["$what","split"]},1,0]}},
              migrationAttempts:{$sum:{$cond:[{$eq:["$what","moveChunk.from"]},1,0]}},
