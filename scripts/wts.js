@@ -254,14 +254,16 @@ wts = function (dbname, options) {
           print("\t\t****WARNING: Collection " + c._id + " is sharded and not dropped, but has ZERO chunks recorded");
       }
       
-      if ( isHashed ) { /* && (detailsNS && detailsNS == c._id || verbose > 0)) */
-          print("Collection " + c._id + " uses a hashed shard key.");
+      if ( isHashed ) { 
+          if (detailsNS && detailsNS == c._id || verbose > 0) print("Collection " + c._id + " uses a hashed shard key.");
           /* check the chunk ranges */
           var ch=chunks.find({ns:c._id}).sort({min:1});
           var prev = {_id:MinKey}
+          first=true;
           ch.forEach(function(chunk) { 
-              if (tojson(chunk.min) != tojson(prev)) 
+              if (tojson(chunk.min) != tojson(prev) && !first) 
                    print("\n\t\t\t\t!!!***ALERT***!!!! " + chunk._id + " has a non-adjacent range!!! \n\t\t Chunk min is " + tojson(chunk.min) + " but previous chunk Max was " + tojson(prev) + "   !!!!!ALERT!!!!\n\n" ); 
+              else first=false;
               prev=chunk.max; 
           });
       }
