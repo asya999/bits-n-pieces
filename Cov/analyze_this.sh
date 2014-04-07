@@ -79,4 +79,4 @@ if [ "$PACKAGE" == "mongo" ]; then
     CVA=" --cva "
 fi
 
-$cov-commit-defects $V --dir $intDir --host cov1.bci.10gen.cc --port 8080 --user asya --password coverity --stream $PACKAGE --description "$build-$covVersion-$VERSION" --version "$VERSION " --target linux64 --strip-path $srcDir
+$cov-commit-defects $V --dir $intDir --host host --port port --user xxxx --password xxxxxxxxx --stream $PACKAGE --description "$build-$covVersion-$VERSION" --version "$VERSION " --target linux64 --strip-path $srcDir
