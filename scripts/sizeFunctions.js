@@ -93,6 +93,7 @@ printCollStats = function (scale) {
     var mydb = db;
     db.getCollectionNames().forEach(
         function(z) {
+            if (z.lastIndexOf("system.",0)===0) return;
             var stats=mydb.getCollection(z).stats(scale);
             print( "ns: " + stats.ns + "\tcount: " + stats.count + "\t size: " + Math.round(stats.size) + unit);
             print( "\t   avgObjSize: " + Math.round(stats.avgObjSize) + "\tstorageSize: " + stats.storageSize + unit + "\t padding: " + Math.round(100*stats.paddingFactor)/100 + unit);
