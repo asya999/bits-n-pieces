@@ -64,3 +64,15 @@ StopWatch.prototype.stop = function()
     this.elapsedMilliseconds = new Date().getTime() - this.startMilliseconds;
 }
 
+printOneAll = function () {     
+       if (arguments.length > 0) {
+           print("printCollectionStats() has no optional arguments");
+           return;     
+       }  
+       var mydb = db;
+       db.getCollectionNames().forEach(function(z) {
+             if (z.lastIndexOf("system.",0)===0) return;
+             print(z + Array((20-z.length)).join(' ') +" \t " + mydb.getCollection(z).count());
+             printjson(mydb.getCollection(z).findOne());
+       });  
+}
