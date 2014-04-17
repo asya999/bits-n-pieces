@@ -1,32 +1,34 @@
-var debug=true;
-var minchar=48;
-var maxchar=122-13;
-/* converts v of type tp to number 
-hexString = yourNumber.toString(16);
-yourNumber = parseInt(hexString, 16);
-*/
+var minchar=32;
+var maxchar=126;
+var saveBinType=0;
+var lookup={ }
+var lookup2={ }
+/* i is char code, j is numerical sequential equivalend */
+var i=0;
+var j=1;
+for (i=minchar;i<maxchar+1;i++,j++) { lookup[i]=j; lookup2[j]=i; }
+firstChar=0;
+secondChar=1;
+
 mapNumToChar = function(n) {
-    if (n < 48) return String.fromCharCode(48);
-    if (n < 58) return String.fromCharCode(n);
-    if (n < 65) return String.fromCharCode(57);
-    if (n < 91) return String.fromCharCode(n-7);
-    if (n < 123) return String.fromCharCode(n-13);
-    print("WTF???   HOW DID I GET HERE???");
+    /* j to i */
+    if (n>95) n=95;
+    if (n<1) n=1;
+    if (lookup2.hasOwnProperty(String(n))) return String.fromCharCode(lookup2[String(n)]); 
+    throw "Invalid number to map to character: " + n;
 }
+
 mapCharToNum = function(s) {
-    var c = s.charCodeAt(0);
-    if (c < 48) return 48;
-    if (c < 58) return c;
-    if (c < 65) return 57;
-    if (c < 91) return c-7;
-    if (c < 97) return 90-7;
-    if (c < 123) return c-13;
-    return(122-13);
-    print("WTF???   HOW DID I GET HERE???");
+    /* i to j */
+    if ( lookup.hasOwnProperty(s.charCodeAt(0)) ) {
+         return lookup[s.charCodeAt(0)]; 
+    }
+    throw "Invalid number to character to map: " + s;
 }
-convertTo = function( v, tp) {
+
+convertFrom = function( v, tp) {
     var i=0;
-    if (debug) print("*** tp in convertTo " + tp);
+    if (debug) print("*** tp in convertFrom " + tp + " with v " + v);
     switch(tp) {
        case "numberI": 
              return v.valueOf();
@@ -38,20 +40,23 @@ convertTo = function( v, tp) {
              return v;
              break;
        case "string": 
-             // fi=v.charCodeAt(0);
-             // se=v.charCodeAt(1);
-             fi = mapCharToNum(v.slice(0,1));
-             se = mapCharToNum(v.slice(1,1));
-             i = fi*10000+se;
-             if (debug) print("Converted string " + v + " to " + i + " from " + fi + " " + se);
+             if (debug) print("String " + v + " is " + v.slice(0,1) + " and " + v.slice(1,2) + " " + tp);
+             fi = mapCharToNum(v.slice(firstChar,firstChar+1));
+             se = mapCharToNum(v.slice(secondChar,secondChar+1));
+             i = fi*100+se;
+             if (debug) print("Converted string " + v + " to " + i + " via " + fi + "/" + se);
              break;
        case "ObjectId": 
              i = parseInt(v.valueOf().slice(0,8), 16);
              break;
+       case "BinData": 
+             saveBinType = v.type;
+             i = parseInt(v.hex().slice(0,8), 16);
+             break;
        case "Date": 
              i = parseInt(v.getTime())/1000;
              break;
-       default: print("Type " + tp + "not supported yet, supported types are number, string, ObjectId, Date and Bin");
+       default: throw "Type " + tp + "not supported yet, supported types are numbers, string, ObjectId, Date and BinData";
     } 
     return i;
 }
@@ -70,23 +75,27 @@ convertBack = function( i, tp) {
              break;
        case "string": 
              /* probably want to do something more specific based on alphanumeric values */
-             fi = Math.floor(i/10000)
-             se = i-(fi*10000);
-             if (debug) print("*** se is " + se);
-             if (se>maxchar) { 
+             fi = Math.floor(i/100)
+             se = i-(fi*100);
+             if (debug) print(""+ fi + " is fi *** se is " + se);
+             /* if (se>maxchar) { 
                   se = se-(Math.floor(se/maxchar)*maxchar)+minchar;
-             }
-             if (se<minchar) se = minchar;
+             } 
+             if (se<minchar) se = minchar; */
+             if (debug) print( " " + mapNumToChar(fi) + " and " + mapNumToChar(se));
              v = mapNumToChar(fi) + mapNumToChar(se);
              if (debug) print("Converted back num " + i + " to " + v + ", " + fi + " " + se);
              break;
        case "ObjectId": 
-             v = i.toString(16) + "0000000000000000";
+             v = ObjectId(i.toString(16) + "0000000000000000");
+             break;
+       case "BinData": 
+             v = BinData(saveBinType, i.toString(16) + "0000000000000000");
              break;
        case "Date": 
              v = new Date(v*1000);
              break;
-       default: print("Type " + tp + "not supported yet, supported types are number, string, ObjectId, Date and Bin");
+       default: throw "Type " + tp + "not supported yet, supported types are number, string, ObjectId, Date and Bin";
     } 
     return v;
 }
@@ -99,11 +108,15 @@ figureOutType = function( v ) {
       if (v instanceof Date)  return("Date");
       if (v instanceof NumberInt) return("numberI");
       if (v instanceof NumberLong) return("numberL");
+      if (v instanceof BinData) return("BinData");
 }
 
 /* minv and maxv must be the same type and that type defines what shard keys will be */
 /* if you get it wrong you are screwed */
-presplit = function ( ns, minvalue, maxvalue) {
+presplit = function ( ns, minvaluein, maxvaluein, debug) {
+    minvalue=minvaluein;
+    maxvalue=maxvaluein;
+    if (debug==undefined) debug=false;
     if (ns==undefined || ns=="usage") {
          print("presplit(ns, minval, maxval) - Takes namespace and min and max values of the first field of the shard key,");
          print("\t\t\t\t\tand creates splits to generate 4x as many chunks as shards and");
@@ -111,15 +124,30 @@ presplit = function ( ns, minvalue, maxvalue) {
          print("\t\t\t\t\tCollection must exist, be empty, be sharded and balancer must be off");
          return;
     }
-    if( typeof(minvalue) != typeof(maxvalue) ) { 
-       print("Whoa, the types of min and max must be the same and they are " + typeof(minvalue) + " and " + typeof(maxvalue) + "!");
-       return;
-    }
+    if( typeof(minvalue) != typeof(maxvalue) ) throw "The types of min and max must be the same!";
     if (debug) print("Before", minvalue, typeof(minvalue),typeof(maxvalue));
     tp = figureOutType(minvalue);
+    tp2 = figureOutType(minvalue);
+    if (tp!=tp2) throw "The types of min and max must be the same!";
     if (debug) print("**** tp is " + tp);
-    minv = convertTo(minvalue, tp);
-    maxv = convertTo(maxvalue, tp);
+    if (tp=="BinData") {
+        minvalue=maxvaluein;
+        maxvalue=minvaluein;
+    }
+    if (tp=="string")
+        for (i=firstChar; i<minvaluein.length,i<maxvaluein.length; i++) {
+          if ( minvalue[firstChar]==maxvalue[firstChar] ) {
+              firstChar=i+1;
+              secondChar=i+2;
+          } else {
+              break;
+          }
+        }
+
+    while(minvalue.slice
+    printjson(minvaluein, maxvaluein, minvalue, maxvalue);
+    minv = convertFrom(minvalue, tp);
+    maxv = convertFrom(maxvalue, tp);
     if (tp=="string") {
        minchar = minvalue.charCodeAt(1);
        maxchar = maxvalue.charCodeAt(1)-13;
@@ -138,7 +166,13 @@ presplit = function ( ns, minvalue, maxvalue) {
     }
     numShards = cfg.shards.count();
     shards = [];
-    cfg.shards.find({},{_id:1}).toArray().forEach(function(s) { shards.push(s._id); });
+    var startShard=0;
+    primaryShard=cfg.databases.findOne({_id:dbname})["primary"];
+    cfg.shards.find({},{_id:1}).sort({_id:1}).toArray().forEach(function(s) { 
+           shards.push(s._id); 
+           if (s._id==primaryShard) startShard=shards.length;
+    });
+    print("startShard,primaryShard " + startShard + " " + primaryShard + " " + tojson(shards));
     if (cfg.collections.count({_id:ns, dropped:false}) == 0) { 
         print("No sharded collection " + ns + " found!");
         if (!debug) return;
@@ -158,11 +192,14 @@ presplit = function ( ns, minvalue, maxvalue) {
     }
     if (debug) print("Key will be " + tojson(key));
     var nchunks = numShards*4;
-    var step = Math.round((maxv-minv)/(nchunks));
+    var step = Math.floor(1+((maxv-minv)/(nchunks)));
     var start = minv+step;
     var stop = maxv;
+    if (true) print("Chunk, step, min, max", nchunks, step, minv, maxv);
+    if (true) print("Shard, s, shards, numShards", primaryShard, startShard, tojson(shards), shards.length);
     if (debug) print("Chunk, step, start, stop", nchunks, step, start, stop);
-    for (i=start,s=0; i<stop; i+=step, s++) {
+    for (i=start,s=startShard; i<stop; i+=step, s++) {
+        print("i, step, start, stop", i, step, start, stop);
         key[P] = convertBack(i, tp);
         toShard = shards[s%numShards];
         print("will be spliting at " + tojson(key) + " and moving to " + toShard);
