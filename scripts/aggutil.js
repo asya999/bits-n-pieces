@@ -9,6 +9,7 @@ diff=function(f1,f2) {
    calc={"$cond":[{"$gt":[sub1,0]}, sub1, sub2]};
    return calc;
 };
+
 within=function(f1,f2,dt) {
    cond={"$cond":[]};
    calc=diff(f1,f2);
@@ -19,3 +20,24 @@ within=function(f1,f2,dt) {
    return cond;
 };
 
+truncate = function (val,places) {
+     var p={ };
+     var divider=Math.pow(10,places);
+     p["$divide"]=[];
+     var newval={"$multiply":[val,divider]};
+     sub={"$subtract":[ newval, {"$mod":[newval, 1]} ]};
+     p["$divide"].push(sub);
+     p["$divide"].push(divider);
+     return p;
+}
+
+round = function (val,places) {
+     var p={ };
+     var divider=Math.pow(10,places);
+     p["$divide"]=[];
+     var newval={$add:[{"$multiply":[val,divider]},.5]}
+     sub={"$subtract":[ newval, {"$mod":[newval, 1]} ]};
+     p["$divide"].push(sub);
+     p["$divide"].push(divider);
+     return p;
+}
