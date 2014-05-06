@@ -1,3 +1,4 @@
+var debug;
 var minchar=32;
 var maxchar=126;
 var saveBinType=0;
@@ -102,7 +103,7 @@ convertBack = function( i, tp) {
 
 figureOutType = function( v ) {
       var x = typeof(v);
-      if (debug) print("** in figureOutType " + v + " " + x);
+      if (true) print("** in figureOutType " + v + " " + x);
       if (x != "object") return(x);
       if (v instanceof ObjectId)  return("ObjectId");
       if (v instanceof Date)  return("Date");
@@ -144,8 +145,6 @@ presplit = function ( ns, minvaluein, maxvaluein, debug) {
           }
         }
 
-    while(minvalue.slice
-    printjson(minvaluein, maxvaluein, minvalue, maxvalue);
     minv = convertFrom(minvalue, tp);
     maxv = convertFrom(maxvalue, tp);
     if (tp=="string") {
