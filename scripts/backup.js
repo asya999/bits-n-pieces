@@ -14,7 +14,11 @@ runBackup=function(backupCommand, force ) {
 
    /* because of possibility of multiple lock/unlock pairs, check if the DB is locked now, so */
    /* that we don't have to worry about checking if it's unlocked when we are finished */
-   var wasLockedWhenWeStarted = isLocked();
+   var lockedAtStart = isLocked();
+   if (lockedAtStart) {
+     if (force) print("Continuing due to force flag, even though server is already locked");
+     else throw "Aborting backup since someone else already has server locked!";
+   }
 
    /* Check that if this is a replica set that we are a secondary */
    var isMaster=db.isMaster();
@@ -24,20 +28,16 @@ runBackup=function(backupCommand, force ) {
       throw "This is a replica set, so we must be talking to a secondary!"
    }
  
-   /* Lock the server, check the success */
+   /* Lock the server, check success */
    var lockResult = db.fsyncLock();
    if ( lockResult.ok != 1 ) {
       print("\nDidn’t successfully fsynLock  the server.  Returned status is " + lockResult.code + " " + lockResult.errmsg);
       throw "Exiting after error locking";
-   } else print("\nCompleted fsyncLock command: now locked against writes.");
-   
-   /* to be super paranoid, check again that the server *is* fsyncLocked via db.currentOp() */
-   if ( isLocked() ) print("Lock held, will proceed with backup\n");
-   else throw "\nLock check via db.currentOp() failed!!!  \nAborting!!!";
+   } else print("\nCompleted fsyncLock command: now locked against writes.\n");
    
    /* safe to proceed */
  
-   /* so that we don't have to worry about spaces, we will run the "command" in its own shell */
+   /* so that we don't have to worry about spaces, we will run the "command" in its own subshell */
    var prefix='bash';
    var here='-c';
    if ( _isWindows() ) {
@@ -45,10 +45,11 @@ runBackup=function(backupCommand, force ) {
        here='/c';
    }
    var sysResult = runProgram(prefix,here,backupCommand);
+   sleep(100);
    
    /* we assume a successfull command/script will return 0, any other return code indicates error */
-   if ( sysResult.ok != 0 )  print("\nDid not successfully run the backup command.  Returned status is " + sysResult);
-   else print("\nSuccessfully ran the backup command.");
+   if ( sysResult != 0 )  print("\nDid not successfully run the backup command.  Returned status is " + sysResult);
+   else print("\nSuccessfully ran the backup command.\n");
    
    /* Now clean up */
    
@@ -57,10 +58,13 @@ runBackup=function(backupCommand, force ) {
    /* we always run unLock regardless of success of backup! */
    var unlockResult = db.fsyncUnlock();
    if ( unlockResult.ok != 1 ) {
-      if ( errmsg == "not locked" ) print("\nServer was already unlocked!  \nPlease check logic of previous steps!");
+      if ( errmsg == "not locked" ) print("\nServer was already unlocked!");
       else {
           print("\nDidn’t successfully fsynUnlock  the server.  \nReturned status is " + tojson(unlockResult));
-          print("\tWill try again every 5 seconds!");
+       /* Next section can be uncommented to keep trying to unlock if you want to guarantee the server is unlocked
+          when the script is finished.  However, this is not safe, since other processes may not be paying
+          attention to already locked state and queueing their lock requests anyway */
+      /*  print("\tWill try again every 5 seconds!");
           while (unlockResult.ok!=1) {
               if (unlockResult.errmsg=='not locked') { 
                    print("\t\tServer no longer locked"); 
@@ -69,11 +73,13 @@ runBackup=function(backupCommand, force ) {
               sleep(5000);
               unlockResult=db.fsyncUnlock();
           }
+       */
       }
    }
 
-   /* If we are here, then we unlocked the server */
-   print("\nServer is unlocked.  We are finished.");
+   if (!isLocked() ) {
+      print("\nServer is unlocked.  We are finished.\n");
+   }
 
 }
 
