@@ -79,10 +79,6 @@ convertBack = function( i, tp) {
              fi = Math.floor(i/100)
              se = i-(fi*100);
              if (debug) print(""+ fi + " is fi *** se is " + se);
-             /* if (se>maxchar) { 
-                  se = se-(Math.floor(se/maxchar)*maxchar)+minchar;
-             } 
-             if (se<minchar) se = minchar; */
              if (debug) print( " " + mapNumToChar(fi) + " and " + mapNumToChar(se));
              v = mapNumToChar(fi) + mapNumToChar(se);
              if (debug) print("Converted back num " + i + " to " + v + ", " + fi + " " + se);

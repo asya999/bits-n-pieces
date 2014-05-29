@@ -1,4 +1,8 @@
-load(d+"aggutil.js");
+// load(d+"aggutil.js");
+unagg = function(cursorOrResultDoc) {
+   if (cursorOrResultDoc.hasOwnProperty("result")) return cursorOrResultDoc.result;
+   else return cursorOrResultDoc.toArray();
+};
 
 shortDate = function (dt) {
     cmin = ""+dt.getUTCMinutes(); 
@@ -205,6 +209,7 @@ wts = function (dbname, options) {
    shards.find().forEach(function(s) {  
          if ( s.host.indexOf("/") > 0 ) reps += 1;
          if ( s.hasOwnProperty("tags") && s.tags.length > 0 ) tagged += 1;
+         if ( s.hasOwnProperty("draining") && s.draining ) print("\tShard " + s._id + " is draining");
    });
    print("\t" + reps + " out of " + shs + " shards are replica sets");
    if ( tagged > 0 ) print("\t" + (tagged==shs ? "all" : tagged + " of " + shs) + " shards have tags set");

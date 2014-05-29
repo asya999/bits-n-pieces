@@ -158,8 +158,8 @@ whatSharded = function (dbname, options) {
    else {  /* it's an object */
        verbose = options.verbose || verbose;
        debug = options.debug || debug;
-       showSplits = options.splits || showSplits;
-       showMigrations = options.migrations || showMigrations;
+       showSplits = options.splits && showSplits;
+       showMigrations = options.migrations && showMigrations;
    }
 
    /* define variables for all config db collections */
@@ -245,7 +245,9 @@ whatSharded = function (dbname, options) {
                    details = details + " " + i +" "+doc.details[i] + "; ";
                }
            }
-           print("\t"+doc.time.toISOString()+"\t"+doc.what+details);
+           if (doc.what.slice(0,4)=="move" && showMigrations) print("\t"+doc.time.toISOString()+"\t"+doc.what+details);
+           else if (doc.what.slice(0,4)=="spli" && showSplits) print("\t"+doc.time.toISOString()+"\t"+doc.what+details);
+           else print("\t"+doc.time.toISOString()+"\t"+doc.what+details);
        }); 
    });
    
