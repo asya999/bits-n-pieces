@@ -10,6 +10,17 @@ finddb = function (str) {
        return dbs; 
 }
 
+findcoll = function (str) {
+        var dbs=[];
+        db.getMongo().getDBs().databases.forEach(function(d) {
+             if (d.name.indexOf(str) != -1) dbs.push(d.name);
+             db.getSiblingDB(d.name).getCollectionNames().forEach(function(co) {
+                 if (co.indexOf(str) != -1) dbs.push(d.name + "." + co);
+             });
+       });
+       return dbs;
+}
+
 prompt = function() {
     var state = "local";
     var version = db.version();
