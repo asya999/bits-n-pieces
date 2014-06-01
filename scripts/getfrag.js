@@ -1,4 +1,4 @@
-function (scale) {
+getFrag=function (scale) {
      var units="";
      rounding=2;
      if (scale == undefined) scale=1;
