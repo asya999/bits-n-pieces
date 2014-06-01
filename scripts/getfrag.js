@@ -44,7 +44,7 @@ getFrag=function (scale) {
                 + "\n\t index size: " + (dbStats.indexSize/scale).toFixed(1)
                 + "\n\t data size: " + (dbStats.dataSize/scale).toFixed(1)
                 + "\n\t Overall fragmentation : \n\t\t\t" 
-                        + (totalsData/totalsStorage).toFixed(3) + " or " + ((totalsStorage-totalsData)/scale).toFixed(rounding)  + units  + " data storage (real) fragmentation on " + (totalsStorage/scale).toFixed(rounding) + units + "of data\n\t\t\t"
-                        + ((totalsStorage+totalsIndex)/dbStats.fileSize).toFixed(3) + " or " + ((dbStats.fileSize-totalsStorage-totalsIndex)/scale).toFixed(rounding) + units + " over-allocation on " + (dbStats.fileSize/scale).toFixed(rounding) + units + " of files"
+                        + (totalsData/totalsStorage).toFixed(3) + " or " + ((totalsStorage-totalsData)/scale).toFixed(rounding)  + units  + " data storage (real) fragmentation on " + (totalsStorage/scale).toFixed(rounding) + units + " of data\n\t\t\t"
+                        + ((totalsStorage+totalsIndex)/dbStats.fileSize).toFixed(3) + " or " + ((dbStats.fileSize-totalsStorage-totalsIndex)/scale).toFixed(rounding) + units + " over + pre-allocation on " + (dbStats.fileSize/scale).toFixed(rounding) + units + " of files"
                 + ".");
 }
