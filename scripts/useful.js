@@ -1,3 +1,48 @@
+conf={ _id:"asya", "members" : [
+		{
+			"_id" : 0,
+			"host" : "Asyas-MacBook-Pro.local:27011"
+		},
+		{
+			"_id" : 1,
+			"host" : "Asyas-MacBook-Pro.local:27022"
+		},
+		{
+			"_id" : 2,
+			"host" : "Asyas-MacBook-Pro.local:27033"
+		}
+]}
+
+rsstatus = function () {
+   var st=rs.status();
+   for (i=0; i<st.members.length; i++) {
+       delete(st.members[i].optime);
+       delete(st.members[i].electionTime);
+       delete(st.members[i].lastHeartbeat);
+       delete(st.members[i].lastHeartbeatRecv);
+       delete(st.members[i].lastHeartbeatMessage);
+       delete(st.members[i].optime);
+   }
+   printjson(st);
+}
+
+getDate = function(ts) {
+    if (ts < 14043901530) return new Date(ts*1000);
+    else return new Date(ts);
+}
+
+mDate=function (dt) {
+     cmin = ""+dt.getUTCMinutes();
+     csec = ""+dt.getUTCSeconds();
+     cmon = ""+(dt.getUTCMonth()+1);
+     cdat = ""+dt.getUTCDate();
+     if (cmon.length==1) cmon="0"+cmon;
+     if (cdat.length==1) cdat="0"+cdat;
+     if (cmin.length==1) cmin="0"+cmin;
+     if (csec.length==1) csec="0"+csec;
+     return dt.getUTCFullYear() + "-" + cmon + "-" + dt.getUTCDate()+" "+dt.getUTCHours() + ":" + cmin + ":" + csec;
+}
+
 shortDate = function (dt) {
     return dt.getFullYear()+"/"+(dt.getMonth()+1)+"/"+dt.getDate()+" "+dt.getHours()+":"+dt.getMinutes()+":"+dt.getSeconds();
 }
