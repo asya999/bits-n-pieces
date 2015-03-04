@@ -17,6 +17,8 @@ rsstatus = function () {
    var st=rs.status();
    for (i=0; i<st.members.length; i++) {
        delete(st.members[i].optime);
+       delete(st.members[i].state);
+       delete(st.members[i].uptime);
        delete(st.members[i].electionTime);
        delete(st.members[i].lastHeartbeat);
        delete(st.members[i].lastHeartbeatRecv);

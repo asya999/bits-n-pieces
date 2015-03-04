@@ -5,18 +5,18 @@
             op : "insert" ,   
             // your db.collection
             ns : "test.foo" ,  
-            safe : false,
+            safe : "j",
             doc : { textField: "texthereetcetcewtrljsdfjdslfjglds", 
                                intField: 1 }
        }
     ]
     
     // print(ops);
-    for ( x = 1; x<=16; x+=1){
+    for ( x = 1; x<=16; x+=1) {
         y = Math.max( x-5, 1);
         // actual call to benchRun, each time using different number of threads
         res = benchRun( { parallel : y ,   // number of threads to run in parallel
-                          host : "localhost:44444",
+                          host : db.getMongo(),
                           seconds : 5 ,    // duration of run can be fractional seconds
                           ops : ops        // array of operations to run (see above)
                         } )
