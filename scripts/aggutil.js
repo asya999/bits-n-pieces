@@ -1,3 +1,34 @@
+makeBuckets = function (field, array) {
+     if (!array.hasOwnProperty("length")) throw "second argument must be an array";
+     if (array.length<2) throw "Expecting an array with more than one value.";
+     var con=[];
+     var maxPos=array.length;
+     con[maxPos]="" + array[maxPos-1] + "+";
+     for (pos = maxPos-1; pos > 0; pos--) {
+        con[pos] = {"$cond":{
+                  if: {$lt:[field, array[pos]]},
+                  then:  "" + array[pos-1]+"-"+array[pos],
+                  else:  con[pos+1]
+        }};
+     }
+     var first = "<" + array[0];
+     con[0]={"$cond":{if: {$lt:[field,array[0]]}, then: first, else: con[1] }};
+     return con[0];
+}
+
+toGBs=function(field) {
+  return {$divide:[field,1024*1024*1024]}
+}
+
+toMBs=function(field) {
+  return {$divide:[field,1024*1024]}
+}
+
+function po2(n) {
+  y=Math.floor(Math.log(n)/Math.log(2));
+  return Math.pow(2,y+1); 
+}
+
 unagg = function(cursorOrResultDoc) {
    if (cursorOrResultDoc.hasOwnProperty("result")) return cursorOrResultDoc.result;
    else return cursorOrResultDoc.toArray();
@@ -12,9 +43,20 @@ diff=function(f1,f2) {
 
 within=function(f1,f2,dt) {
    cond={"$cond":[]};
-   calc=diff(f1,f2);
-   le={"$le":[calc,dt]};
-   cond["$cond"].push(calc);
+   orCond={"$or":[]};
+   and1={"$and":[]};
+   and2={"$and":[]};
+   l1={"$lt":[f1,dt]};
+   l2={"$lt":[f2,dt]};
+   g1={"$gt":[f1,dt]};
+   g2={"$gt":[f2,dt]};
+   and1.push(l1);
+   and1.push(g2);
+   and2.push(l2);
+   and2.push(g1);
+   orCond.push(and1);
+   orCond.push(and2);
+   cond["$cond"].push(orCond);
    cond["$cond"].push(true);
    cond["$cond"].push(false);
    return cond;

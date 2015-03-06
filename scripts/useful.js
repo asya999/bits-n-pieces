@@ -28,6 +28,11 @@ rsstatus = function () {
    printjson(st);
 }
 
+po2 = function(n) {
+   y=Math.floor(Math.log(n)/Math.log(2));
+  return Math.pow(2,y+1); 
+}
+
 getDate = function(ts) {
     if (ts < 14043901530) return new Date(ts*1000);
     else return new Date(ts);
