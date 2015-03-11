@@ -1,3 +1,8 @@
+unagg = function(cursorOrResultDoc) {
+   if (cursorOrResultDoc.hasOwnProperty("result")) return cursorOrResultDoc.result;
+   else return cursorOrResultDoc.toArray();
+};
+
 makeBuckets = function (field, array) {
      if (!array.hasOwnProperty("length")) throw "second argument must be an array";
      if (array.length<2) throw "Expecting an array with more than one value.";
@@ -24,42 +29,19 @@ toMBs=function(field) {
   return {$divide:[field,1024*1024]}
 }
 
-function po2(n) {
-  y=Math.floor(Math.log(n)/Math.log(2));
-  return Math.pow(2,y+1); 
-}
+max=function(a,b) { return {$cond:{if:{$gt:[a,b]},then:a,else:b}} }
 
-unagg = function(cursorOrResultDoc) {
-   if (cursorOrResultDoc.hasOwnProperty("result")) return cursorOrResultDoc.result;
-   else return cursorOrResultDoc.toArray();
-};
+min=function(a,b) { return {$cond:{if:{$gt:[a,b]},then:b,else:a}} }
+
+percent=function(f1, total) {
+    return round({$multiply:[{$divide:[ f1,total ]},100]} , 2);
+}
 
 diff=function(f1,f2) {
    sub1={"$subtract":[f1,f2]}; /* f1-f2 < 0 ? f1-f2 : f2-f1 */
    sub2={"$subtract":[f2,f1]}; /* f1-f2 < 0 ? f1-f2 : f2-f1 */
    calc={"$cond":[{"$gt":[sub1,0]}, sub1, sub2]};
    return calc;
-};
-
-within=function(f1,f2,dt) {
-   cond={"$cond":[]};
-   orCond={"$or":[]};
-   and1={"$and":[]};
-   and2={"$and":[]};
-   l1={"$lt":[f1,dt]};
-   l2={"$lt":[f2,dt]};
-   g1={"$gt":[f1,dt]};
-   g2={"$gt":[f2,dt]};
-   and1.push(l1);
-   and1.push(g2);
-   and2.push(l2);
-   and2.push(g1);
-   orCond.push(and1);
-   orCond.push(and2);
-   cond["$cond"].push(orCond);
-   cond["$cond"].push(true);
-   cond["$cond"].push(false);
-   return cond;
 };
 
 truncate = function (val,places) {
@@ -83,3 +65,25 @@ round = function (val,places) {
      p["$divide"].push(divider);
      return p;
 }
+
+within=function(f1,f2,dt) {
+   cond={"$cond":[]};
+   orCond={"$or":[]};
+   and1={"$and":[]};
+   and2={"$and":[]};
+   l1={"$lt":[f1,dt]};
+   l2={"$lt":[f2,dt]};
+   g1={"$gt":[f1,dt]};
+   g2={"$gt":[f2,dt]};
+   and1.push(l1);
+   and1.push(g2);
+   and2.push(l2);
+   and2.push(g1);
+   orCond.push(and1);
+   orCond.push(and2);
+   cond["$cond"].push(orCond);
+   cond["$cond"].push(true);
+   cond["$cond"].push(false);
+   return cond;
+};
+
