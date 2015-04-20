@@ -59,13 +59,15 @@ makeSubtableWrappers=function(doc, tablename, dbname, collectionname) {
     var pipeline=[];
     var project={"$project":{}};
     var createCmd=[];
+    needProject=false;
     for (i in doc) {
       if ( typeof doc[i] == "object" && doc[i].hasOwnProperty("length") ) {
          /* make another table */
          pr={"$project":{}};
          sch={};
          pr["$project"][collectionname+"_id"]="$_id";
-         sch[collectionname+"_id"]=figureOutType(doc["_id"]);
+         /* sch[collectionname+"_id"]=figureOutType(doc["_id"]); */
+         sch["_id"]=figureOutType(doc["_id"]); /* _id of the "parent" should be filter-able */
          print("calling makeWrapper with " + tablename+"__"+i);
          createCmd.push(makeWrapper(doc[i][0], tablename+"__"+i, dbname, collectionname, [{"$unwind":"$"+i}], pr, i+".", sch ));
       } else { 
