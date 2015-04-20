@@ -79,6 +79,8 @@ prompt = function() {
     var host = hostname();
     var replPrompt = defaultPrompt();
     if (db.version() < '2.5.5') replPrompt = replSetMemberStatePrompt();
+    port=db.getMongo().toString().split(':')[1];
+    if (port == undefined) port="27017";
     if (replPrompt == "> ") {
         if (host.slice(-5) == "local") {
             state = "local";
@@ -89,7 +91,7 @@ prompt = function() {
         state = replPrompt.slice(0,-2);
     }
 
-    return db + "@" + state + "(" + version + ") > ";
+    return db + "@" + state + ":" + port + "(" + version + ") > ";
 }
 
 count = function(ns, key) {
