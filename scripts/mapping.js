@@ -20,8 +20,10 @@ figureOutType = function ( v ) {
       if (x != "object") {
            if (x=="string") return("varchar");
            if (x=="number") return("numeric");
+           debug("Shouldn't be there!");
+           return("UNSUPPORTED");
       }
-      if (v.hasOwnProperty("length") && v.length==2 && v[0]=="number") return("geo");
+      if (v.hasOwnProperty("length") && v.length==2 && typeof(v[0])=="number") return("geo");
       if (v.hasOwnProperty("length")) return("array");
       if (v instanceof ObjectId)  return("varchar");
       if (v instanceof Date)  return("date");
@@ -33,11 +35,13 @@ figureOutType = function ( v ) {
 
 makeDocSchema = function(doc, coll, _id, prefix) {
     depth++;
+    debug("depth " + depth + " and prefix:  " + prefix);
     // debug("" + depth + ":  " + prefix + " " + tojson(schema));
     if (prefix==undefined) prefix="";
     else prefix=prefix+".";
     for (i in doc) {
         doctype = figureOutType(doc[i]);
+        debug("i: "+i+"   doctype: " + doctype);
         if (doctype=="null" || doctype=="UNSUPPORTED") continue;
         else if (doctype=="geo") {
             schema[coll][prefix+i]="numeric[]";
@@ -48,9 +52,10 @@ makeDocSchema = function(doc, coll, _id, prefix) {
                 elemtype=figureOutType(doc[i][j]);
                 if (elemtype!="DOC") {
                     debug("simple field " + prefix + " (probably array element) " + i + " " + j);
-                    schema[coll+"__"+prefix+i]=elemtype;
+                    schema[coll+"__"+prefix+i][prefix+i]=elemtype;
                 } else {
                     debug("" + j + " out of " + doc[i].length + ":  " + tojson(schema));
+                    debug(doc[i][j], coll, _id, coll+"__"+prefix+i);
                     makeDocSchema(doc[i][j], coll, _id, coll+"__"+prefix+i);
                 }
             // }
@@ -65,6 +70,7 @@ makeDocSchema = function(doc, coll, _id, prefix) {
 }
 
 makeSchema = function ( dbname, coll ) {
+    schema={};
     schema[coll]={};
     db.getSiblingDB(dbname).getCollection(coll).find().limit(1).forEach(function(doc) {
         makeDocSchema(doc, coll, doc._id);
