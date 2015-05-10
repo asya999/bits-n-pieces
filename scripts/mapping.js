@@ -1,87 +1,73 @@
+/*                                                            */
+/* top level:  pipeline { tablename : [] }                 */
+/* top level:  project { tablename : {} }                 */
+/* top level:  schema { tablename : {} }                 */
+/* build up table definitions for multiple tables/collections */
+depth=0;
+debugOn=true;
+pipeline = {}
+project = {}
+schema = {}
+
+debug = function (x) {
+   if (debugOn) print("DEBUG: " + Array(depth).join(' ') + x);
+}
+
 figureOutType = function ( v ) {
+      if (v == undefined) return(null);
+      if (v == null) return(null);
       var x = typeof(v);
-      if (debug) print("** in figureOutType " + v + " " + x);
       if (x != "object") {
            if (x=="string") return("varchar");
            if (x=="number") return("numeric");
       }
+      if (v.hasOwnProperty("length") && v.length==2 && v[0]=="number") return("geo");
+      if (v.hasOwnProperty("length")) return("array");
       if (v instanceof ObjectId)  return("varchar");
       if (v instanceof Date)  return("date");
       if (v instanceof NumberInt) return("numeric");
       if (v instanceof NumberLong) return("numeric");
       if (v instanceof BinData) return("UNSUPPORTED");
-      return("UNDEFINED")
+      return("DOC")
 }
 
-/* given document create wrapper create assuming any top level array should be unwound, inner arrays ignored */
-makeWrapper=function(doc, tablename, dbname, collectionname, pipeline, project, prefix, schema ) {
-    if (schema == undefined) schema={};
-    if (prefix == undefined) prefix="";
-    if (pipeline == undefined) pipeline=[];
-    if (project == undefined) project={"$project":{}};
+makeDocSchema = function(doc, coll, _id, prefix) {
+    depth++;
+    // debug("" + depth + ":  " + prefix + " " + tojson(schema));
+    if (prefix==undefined) prefix="";
+    else prefix=prefix+".";
     for (i in doc) {
-         typeis=figureOutType(doc[i]);
-         if (typeis!="UNDEFINED") {
-             schema[i]=typeis;
-             project["$project"][i]="$"+prefix+i;
-         } else {
-             if ( doc[i].hasOwnProperty("length") ) {
-                pipeline.push({"$unwind":"$"+i});
-                for (j=0; j<doc[i].length; j++) {
-                    for (k in doc[i][j]) {
-                      jtype=figureOutType(doc[i][j][k]);
-                      if (jtype != "UNDEFINED") {
-                        schema[i+"__"+k]=jtype;
-                        project["$project"][i+"__"+k]="$"+i+"."+k;
-                      } else if ( ! doc[i][j][k].hasOwnProperty("length") ) {
-                           schema[i+"__"+k]="varchar";
-                           project["$project"][i+"__"+k]="$"+i+"."+k;
-                           /* project["$project"][i+"__"+k]={"$literal":JSON.stringify(doc[i][j][k]); }; */
-                      }
-                    }
+        doctype = figureOutType(doc[i]);
+        if (doctype=="null" || doctype=="UNSUPPORTED") continue;
+        else if (doctype=="geo") {
+            schema[coll][prefix+i]="numeric[]";
+        } else if (doctype=="array") { 
+            if ( !schema.hasOwnProperty(coll+"__"+prefix+i)) schema[coll+"__"+prefix+i]={};
+            schema[coll+"__"+prefix+i][coll+"_id"]=figureOutType(_id); /* nested arrays - need top level _id */
+            /* for (j=0; j<5 && j<doc[i].length; j++) { */ j=0;
+                elemtype=figureOutType(doc[i][j]);
+                if (elemtype!="DOC") {
+                    debug("simple field " + prefix + " (probably array element) " + i + " " + j);
+                    schema[coll+"__"+prefix+i]=elemtype;
+                } else {
+                    debug("" + j + " out of " + doc[i].length + ":  " + tojson(schema));
+                    makeDocSchema(doc[i][j], coll, _id, coll+"__"+prefix+i);
                 }
-             } else {
-                schema[i]="varchar";
-                project["$project"][i]={"$literal":JSON.stringify(doc[i])};
-             } 
-         }
+            // }
+        } else if (doctype=="DOC") {
+            debug("Calling recursively in DOC for i " + i + " "  + prefix+i + "  " + tojsononeline(doc[i]));
+            makeDocSchema(doc[i], coll, _id, prefix+i);
+        } else if (doctype!="UNSUPPORTED") {
+            schema[coll][prefix+i]=doctype;
+        }
     }
-    pipeline.push(project);
-    return "create foreign table " + tablename + " ( " + 
-                  JSON.stringify(schema).slice(1,-1).replace(/:/g, ' ') + 
-                  " ) server mongodb_srv options(db '" + dbname + "', collection '" + collectionname + "', pipe '" + 
-                  JSON.stringify(pipeline) + "' );"
+    depth--;
 }
 
-/* given document, create wrapper for its non-arrays and a separate wrapper for each top level array */
-makeSubtableWrappers=function(doc, tablename, dbname, collectionname) {
-    var schema={};
-    var pipeline=[];
-    var project={"$project":{}};
-    var createCmd=[];
-    needProject=false;
-    for (i in doc) {
-      if ( typeof doc[i] == "object" && doc[i].hasOwnProperty("length") ) {
-         /* make another table */
-         pr={"$project":{}};
-         sch={};
-         pr["$project"][collectionname+"_id"]="$_id";
-         /* sch[collectionname+"_id"]=figureOutType(doc["_id"]); */
-         sch["_id"]=figureOutType(doc["_id"]); /* _id of the "parent" should be filter-able */
-         print("calling makeWrapper with " + tablename+"__"+i);
-         createCmd.push(makeWrapper(doc[i][0], tablename+"__"+i, dbname, collectionname, [{"$unwind":"$"+i}], pr, i+".", sch ));
-      } else { 
-         typeis=figureOutType(doc[i]);
-         if (typeis!="UNDEFINED") {
-             schema[i]=typeis;
-             project["$project"][i]=1;
-         }
-      }
-    }
-    pipeline.push(project);
-    createCmd.push("create foreign table " + tablename + " ( " + 
-               JSON.stringify(schema).slice(1,-1).replace(/:/g, ' ') + 
-               " ) server mongodb_srv options(db '" + dbname + "', collection '" + collectionname + "', pipe '" + 
-               JSON.stringify(pipeline) + "' );" );
-    return createCmd;
+makeSchema = function ( dbname, coll ) {
+    schema[coll]={};
+    db.getSiblingDB(dbname).getCollection(coll).find().limit(1).forEach(function(doc) {
+        makeDocSchema(doc, coll, doc._id);
+    });
+    printjson(schema);
 }
