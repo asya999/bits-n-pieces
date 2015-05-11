@@ -18,7 +18,8 @@ figureOutType = function ( v ) {
       if (x != "object") {
            if (x=="string") return("varchar");
            if (x=="number") return("numeric");
-           debug("Shouldn't be there!");
+           if (x=="boolean") return("boolean");
+           debug("Shouldn't be there! x is not an object, string or number, it's "+x);
            return("UNSUPPORTED");
       }
       if (v.hasOwnProperty("length") && v.length==2 && typeof(v[0])=="number") return("geo");
@@ -49,8 +50,8 @@ makeDocSchema = function(doc, coll, _id, prefix) {
             /* for (j=0; j<5 && j<doc[i].length; j++) { */ j=0;
                 elemtype=figureOutType(doc[i][j]);
                 if (elemtype!="DOC") {
-                    debug("simple field " + prefix + " (probably array element) " + i + " " + j);
-                    schema[coll+"__"+prefix+i][prefix+i]=elemtype;
+                    debug("simple field " + prefix + " (probably array element) " + i);
+                    if (elemtype!=null) schema[coll+"__"+prefix+i][prefix+i]=elemtype;
                 } else {
                     debug("" + j + " out of " + doc[i].length + ":  " + tojson(schema));
                     debug(tojsononeline(doc[i][j]) + "  " + coll  +  "   " + coll+"__"+prefix+i);
@@ -67,10 +68,11 @@ makeDocSchema = function(doc, coll, _id, prefix) {
     depth--;
 }
 
-makeSchema = function ( dbname, coll ) {
+makeSchema = function ( dbname, coll, sample ) {
+    if (sample==undefined) sample=5;
     schema={};
     schema[coll]={};
-    db.getSiblingDB(dbname).getCollection(coll).find().limit(1).forEach(function(doc) {
+    db.getSiblingDB(dbname).getCollection(coll).find().limit(sample).forEach(function(doc) {
         makeDocSchema(doc, coll, doc._id);
     });
     printjson(schema);
