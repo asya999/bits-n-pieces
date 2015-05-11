@@ -1,6 +1,4 @@
-/*                                                            */
-/* top level:  pipeline { tablename : [] }                 */
-/* top level:  project { tablename : {} }                 */
+/*                                                       */
 /* top level:  schema { tablename : {} }                 */
 /* build up table definitions for multiple tables/collections */
 depth=0;
@@ -55,8 +53,8 @@ makeDocSchema = function(doc, coll, _id, prefix) {
                     schema[coll+"__"+prefix+i][prefix+i]=elemtype;
                 } else {
                     debug("" + j + " out of " + doc[i].length + ":  " + tojson(schema));
-                    debug(doc[i][j], coll, _id, coll+"__"+prefix+i);
-                    makeDocSchema(doc[i][j], coll, _id, coll+"__"+prefix+i);
+                    debug(tojsononeline(doc[i][j]) + "  " + coll  +  "   " + coll+"__"+prefix+i);
+                    makeDocSchema(doc[i][j], coll+"__"+prefix+i, _id, prefix+i);
                 }
             // }
         } else if (doctype=="DOC") {
