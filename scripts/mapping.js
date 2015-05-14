@@ -1,9 +1,12 @@
 /*                                                       */
 /* top level:  schema { tablename : {} }                 */
 /* build up table definitions for multiple tables/collections */
+/* create table statement, if pipeline needed, add pipeline */
+/* optionally output create view statement */
+
 depth=0;
-debugOn=true;
-pipeline = {}
+debugOn=false;
+pipeline = [];
 project = {}
 schema = {}
 
@@ -22,7 +25,7 @@ figureOutType = function ( v ) {
            debug("Shouldn't be there! x is not an object, string or number, it's "+x);
            return("UNSUPPORTED");
       }
-      if (v.hasOwnProperty("length") && v.length==2 && typeof(v[0])=="number") return("geo");
+      if (v.hasOwnProperty("length") && v.length==2 && typeof(v[0])=="number" && typeof(v[1])=="number") return("geo");
       if (v.hasOwnProperty("length")) return("array");
       if (v instanceof ObjectId)  return("varchar");
       if (v instanceof Date)  return("date");
@@ -35,8 +38,7 @@ figureOutType = function ( v ) {
 makeDocSchema = function(doc, coll, _id, prefix) {
     depth++;
     debug("depth " + depth + " and prefix:  " + prefix);
-    // debug("" + depth + ":  " + prefix + " " + tojson(schema));
-    if (prefix==undefined) prefix="";
+    if (prefix==undefined || prefix=="") prefix="";
     else prefix=prefix+".";
     for (i in doc) {
         doctype = figureOutType(doc[i]);
@@ -55,7 +57,7 @@ makeDocSchema = function(doc, coll, _id, prefix) {
                 } else {
                     debug("" + j + " out of " + doc[i].length + ":  " + tojson(schema));
                     debug(tojsononeline(doc[i][j]) + "  " + coll  +  "   " + coll+"__"+prefix+i);
-                    makeDocSchema(doc[i][j], coll+"__"+prefix+i, _id, prefix+i);
+                    makeDocSchema(doc[i][j], coll+"__"+prefix+i, _id, prefix);
                 }
             // }
         } else if (doctype=="DOC") {
@@ -68,6 +70,49 @@ makeDocSchema = function(doc, coll, _id, prefix) {
     depth--;
 }
 
+generateSchema = function(dbname, coll, schema, pipeline) {
+    /* cleanse schema of stuff that will get barfed on */
+    addUnwind=false;
+    for (c in schema) {
+        if (addUnwind) pipeline.push({"$unwind":"$"+c1});
+        project={"$project":{}};
+        for (key in schema[c]) {
+           /* max column length is 62 chars */
+           newkey=key;
+           if (key.length>62) {
+              /* create new shorter name (maybe take out " ", "_", "-", etc. and then truncate  */
+              newkey=key.replace(/ /g, '').slice(0,62);
+              schema[c][newkey]=schema[c][key];
+              /* project the full name to a shortened name */
+              delete(schema[c][key]);
+           } 
+           if (key!="_id") {
+              ifNull={};
+              ifNull["$ifNull"]=[];
+              ifNull["$ifNull"].push('$'+key);
+              ifNull["$ifNull"].push(null);
+              project["$project"][newkey]=ifNull;
+           }
+        }
+        pipeline.push(project);
+        if (pipeline.length > 0) {
+              pipe=", pipe '" + JSON.stringify(pipeline) + "'";
+        } else {
+              pipe='';
+        }
+        print("create foreign table " + c + " ( " +
+               JSON.stringify(schema[c]).slice(1,-1).replace(/:/g, ' ').replace(/"boolean"/g, 'boolean') +
+               " ) server mongodb_srv options(db '" + dbname + "', collection '" + coll + "'" +
+               pipe + ");" );
+        print("create view " + c + "_view as select * from " + c + ";");
+        if (!addUnwind) { 
+            c1=c;
+            addUnwind=true;
+        }
+    }
+}
+
+/* database name, collection name (will be used for table name) and how many documents to sample, (default 5) */
 makeSchema = function ( dbname, coll, sample ) {
     if (sample==undefined) sample=5;
     schema={};
@@ -75,5 +120,6 @@ makeSchema = function ( dbname, coll, sample ) {
     db.getSiblingDB(dbname).getCollection(coll).find().limit(sample).forEach(function(doc) {
         makeDocSchema(doc, coll, doc._id);
     });
-    printjson(schema);
+    pipe='';
+    generateSchema(dbname, coll, schema, pipeline);
 }
