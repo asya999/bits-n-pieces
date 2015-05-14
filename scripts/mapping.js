@@ -4,6 +4,20 @@
 /* create table statement, if pipeline needed, add pipeline */
 /* optionally output create view statement */
 
+checkAllFields = function (d, c, doc) {
+        var total=db.getSiblingDB(d).getCollection(c).count();
+        for (f in doc) {
+              var fexists={};
+              fexists[f]={"$exists":false}
+              var fc=db.getSiblingDB(d).getCollection(c).count(fexists);
+              if (fc!=total) {
+                  debug("Alert!   Table " + z + " field " + f + " isn't present in every document.  Total is " + total + " and field is missing in " + fc + ".");
+                  return false;
+              }
+        }
+        return true;
+}
+
 depth=0;
 debugOn=false;
 pipeline = [];
@@ -73,6 +87,8 @@ makeDocSchema = function(doc, coll, _id, prefix) {
 generateSchema = function(dbname, coll, schema, pipeline) {
     /* cleanse schema of stuff that will get barfed on */
     addUnwind=false;
+    dataMayBeMissing=true;
+    needProject=false;
     for (c in schema) {
         if (addUnwind) pipeline.push({"$unwind":"$"+c1});
         project={"$project":{}};
@@ -86,13 +102,18 @@ generateSchema = function(dbname, coll, schema, pipeline) {
               /* project the full name to a shortened name */
               delete(schema[c][key]);
            } 
-           if (key!="_id") {
+           if (key!="_id") { 
+            if ( key!=newkey || (dataMayBeMissing && schema[c][key]!="varchar" )) {
+              needProject=true;
               ifNull={};
               ifNull["$ifNull"]=[];
               ifNull["$ifNull"].push('$'+key);
               ifNull["$ifNull"].push(null);
               project["$project"][newkey]=ifNull;
-           }
+            } else {
+              project["$project"][newkey]=1;
+            }
+          }
         }
         pipeline.push(project);
         if (pipeline.length > 0) {
@@ -101,7 +122,7 @@ generateSchema = function(dbname, coll, schema, pipeline) {
               pipe='';
         }
         print("create foreign table " + c + " ( " +
-               JSON.stringify(schema[c]).slice(1,-1).replace(/:/g, ' ').replace(/"boolean"/g, 'boolean') +
+               JSON.stringify(schema[c]).slice(1,-1).replace(/:/g, ' ').replace(/"boolean"/g, 'boolean').replace(/"numeric[]"/, 'numeric[]') +
                " ) server mongodb_srv options(db '" + dbname + "', collection '" + coll + "'" +
                pipe + ");" );
         print("create view " + c + "_view as select * from " + c + ";");
