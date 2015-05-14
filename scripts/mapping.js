@@ -4,9 +4,10 @@
 /* create table statement, if pipeline needed, add pipeline */
 /* optionally output create view statement */
 
-checkAllFields = function (d, c, doc) {
-        var total=db.getSiblingDB(d).getCollection(c).count();
-        if (total == 0) return false;
+checkAllFields = function (d, c, doc, field) {
+    var total=db.getSiblingDB(d).getCollection(c).count();
+    if (total == 0) return false;
+    if (field == undefined) {
         for (f in doc) {
               var fexists={};
               fexists[f]={"$exists":false}
@@ -17,6 +18,15 @@ checkAllFields = function (d, c, doc) {
               }
         }
         return true;
+    } else {
+        var fexists={};
+        fexists[field]={"$exists":false}
+        var fc=db.getSiblingDB(d).getCollection(c).count(fexists);
+        if (fc>0) {
+            debug("Table " + c + " field " + field + " isn't present in every document.  Total is " + total + " and field is missing in " + fc + ".");
+            return false;
+        } else return true;
+    }
 }
 
 depth=0;
@@ -88,11 +98,11 @@ makeDocSchema = function(doc, coll, _id, prefix) {
 generateSchema = function(dbname, coll, schema, pipeline) {
     /* cleanse schema of stuff that will get barfed on */
     addUnwind=false;
-    dataMayBeMissing=true;
     needProject=false;
     for (c in schema) {
         if (addUnwind) pipeline.push({"$unwind":"$"+c1});
         project={"$project":{}};
+        dataMayBeMissing=checkAllFields(dbname, coll, schema[c]);
         for (key in schema[c]) {
            /* max column length is 62 chars */
            newkey=key;
@@ -104,17 +114,17 @@ generateSchema = function(dbname, coll, schema, pipeline) {
               delete(schema[c][key]);
            } 
            if (key!="_id") { 
-            if ( key!=newkey || (dataMayBeMissing && schema[c][key]!="varchar" )) {
-              needProject=true;
-              ifNull={};
-              ifNull["$ifNull"]=[];
-              ifNull["$ifNull"].push('$'+key);
-              ifNull["$ifNull"].push(null);
-              project["$project"][newkey]=ifNull;
-            } else {
-              project["$project"][newkey]=1;
-            }
-          }
+              if ( key!=newkey || (dataMayBeMissing && schema[c][key]!="varchar" )) {
+                needProject=true;
+                ifNull={};
+                ifNull["$ifNull"]=[];
+                ifNull["$ifNull"].push('$'+key);
+                ifNull["$ifNull"].push(null);
+                project["$project"][newkey]=ifNull;
+              } else {
+                project["$project"][newkey]=1;
+              }
+           }
         }
         pipeline.push(project);
         if (pipeline.length > 0) {
@@ -123,7 +133,7 @@ generateSchema = function(dbname, coll, schema, pipeline) {
               pipe='';
         }
         print("create foreign table " + c + " ( " +
-               JSON.stringify(schema[c]).slice(1,-1).replace(/:/g, ' ').replace(/"boolean"/g, 'boolean').replace(/"numeric[]"/, 'numeric[]') +
+               JSON.stringify(schema[c]).slice(1,-1).replace(/:/g, ' ').replace(/"/g, ' ') + // replace(/"boolean"/g, 'boolean').replace(/"numeric\[\]]"/, 'numeric[]') +
                " ) server mongodb_srv options(db '" + dbname + "', collection '" + coll + "'" +
                pipe + ");" );
         print("create view " + c + "_view as select * from " + c + ";");
