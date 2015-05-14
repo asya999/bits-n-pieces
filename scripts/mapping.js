@@ -6,12 +6,13 @@
 
 checkAllFields = function (d, c, doc) {
         var total=db.getSiblingDB(d).getCollection(c).count();
+        if (total == 0) return false;
         for (f in doc) {
               var fexists={};
               fexists[f]={"$exists":false}
               var fc=db.getSiblingDB(d).getCollection(c).count(fexists);
-              if (fc!=total) {
-                  debug("Alert!   Table " + z + " field " + f + " isn't present in every document.  Total is " + total + " and field is missing in " + fc + ".");
+              if (fc>0) {
+                  debug("Table " + c + " field " + f + " isn't present in every document.  Total is " + total + " and field is missing in " + fc + ".");
                   return false;
               }
         }
