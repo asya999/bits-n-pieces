@@ -252,8 +252,8 @@ generateSchema = function(dbname, coll) {
     }
 }
 
-cleanseSchema = function() {
-     debug("to be implemented - should we review all column names for safety?  ");
+prepSchema = function() {
+     
 }
 
 /* database name, collection name (will be used for table name) and how many documents to sample, (default 5) */
@@ -268,13 +268,13 @@ makeSchema = function ( dbname, coll, sample, debugopt ) {
     generateSchema(dbname, coll);
 }
 
-useSchema = function (dbname, coll, sample, debugopt) {
+doSchema = function (dbname, coll, sample, debugopt) {
     if (debugopt!=undefined) debugOn=debugopt; 
-    if (sample==undefined) sample=50;
+    if (sample==undefined) sample=100;
     _schema[coll]={};
-    var sch=db.getSiblingDB(dbname).getCollection(coll).schema({flat:false});
+    var sch=db.getSiblingDB(dbname).getCollection(coll).schema({flat:true});
     /* transform contents of sch into _schema */
-    cleanseSchema();
-    generateSchema(dbname, coll);
+    pschema = prepSchema(sch);
+    generatePGSchema(dbname, coll);
 
 }
