@@ -21,7 +21,7 @@ schema_to_view=function(sch) {
       sv='';  /* format is column, column, column as newname, etc */
       if (sch.hasOwnProperty("fieldmap")) fm=sch.fieldmap;
       var s=sch.schema;
-      for (f in s) {
+      for (var f in s) {
          if (f.startsWith("#")) continue;
          if (!s.hasOwnProperty(f)) continue;
          if (!s[f].hasOwnProperty("#pgtype")) continue;
@@ -42,7 +42,7 @@ schema_to_view=function(sch) {
 
 schema_stringify=function(s) {
       ss='';
-      for (f in s) {
+      for (var f in s) {
          if (!s[f].hasOwnProperty("#pgtype")) continue;
          ss = ss + JSON.stringify(f) + " " + s[f]["#pgtype"] + ",";
       }
@@ -72,14 +72,11 @@ firstKeyName = function(o) {
     }
 }
 
-reduceType = function(typeobj) {
-     debug("reduceType: " + tojson(typeobj));
-     if (typeof(typeobj)!="object") return typeobj;
-     types=[];
-     if (typeobj.hasOwnProperty("length")) types=typeobj;
-     else for (f in typeobj) {
-         if (typeobj.hasOwnProperty(f)) types.push(f);
-     }
+/* if passed in a list of types, then return dominant simple type out of it */
+reduceType = function(types) {
+     debug("reduceType: " + tojson(types));
+     /* if not array or object ready to return */
+     if (typeof(types)!="object") return types;
      debug("Types is " + tojson(types));
      if (types.length==1) return types[0];
      if (types.length==0) return "null";
@@ -94,6 +91,7 @@ reduceType = function(typeobj) {
      if ( types.indexOf("text") >= 0 ) return "text";
      if ( types.indexOf("date") >= 0 ) return "date";
      if ( types.indexOf("number") >= 0 ) return "number";
+     return null;
 }
 
 ifnull = function(f, n) {
@@ -144,7 +142,7 @@ prepSchema = function(mschema, dbname, coll, tablename, result) {
 
     numRecords=mschema["#count"];
 
-    for (field in mschema) {
+    for (var field in mschema) {
         if ( ! mschema.hasOwnProperty(field) ) continue;
         if ( '__schema' == field ) continue;  /* skip metadata */
         if ( field.startsWith("#") ) continue;  /* skip metadata */
@@ -189,7 +187,7 @@ prepSchema = function(mschema, dbname, coll, tablename, result) {
               fschema[field]={}
               fschema[field]["_id"]=mschema["_id"];
               fschema[field]["_id"]["#viewname"]=coll+"._id";
-              for (g in currentfield) 
+              for (var g in currentfield) 
                  if (currentfield.hasOwnProperty(g) && !g.startsWith("#")) 
                      fschema[field][field+"."+g]=currentfield[g]; 
               result=prepSchema(fschema[field], dbname, coll, subtable, result);
@@ -209,7 +207,7 @@ prepSchema = function(mschema, dbname, coll, tablename, result) {
         }
         debug("left with field " + field + " currentfield is " + tojsononeline(currentfield));
         result[tablename]["schema"][field]={};
-        for (g in currentfield) {
+        for (var g in currentfield) {
            if (currentfield.hasOwnProperty(g)) result[tablename]["schema"][field][g]=currentfield[g];
         }
     }
@@ -221,7 +219,8 @@ prepSchema = function(mschema, dbname, coll, tablename, result) {
     sch = result[tablename]["schema"];
     debug("Table is " + tablename);
     debug(sch);
-    for (f in sch) {
+    for (var f in sch) {
+        if (!sch.hasOwnProperty(f)) continue;
         if (f.startsWith("#") || f.startsWith("__")) continue;
         /*  unfinished - if the field name isn't legal postgres column then we need to do some hoop jumping */
         if (f.length>62) {  /* should check if it already has #pgname? */
@@ -236,15 +235,25 @@ prepSchema = function(mschema, dbname, coll, tablename, result) {
            }
            result[tablename]["fieldmap"][newf]=f;
         }
-        sch[f]["#pgtype"]=mapType(reduceType(sch[f]["#type"]));
+        if (typeof sch[f]["#type"] == "object") {
+          types=[]
+          typeobj=sch[f]["#type"];
+          for (var g in typeobj) if (typeobj.hasOwnProperty(g)) types.push(g);
+          type1=reduceType(types);
+        } else 
+          type1=sch[f]["#type"];
+        sch[f]["#pgtype"]=mapType(type1);
         if (f.startsWith("Zip") || f.startsWith("zip")) sch[f]["#pgtype"]="varchar";
 
-        debug("field " + f + " was " + tojson(sch[f]["#type"]) + " but turned into " + sch[f]["#pgtype"] );
+        // debug("field " + f + " was " + tojson(sch[f]["#type"]) + " but turned into " + sch[f]["#pgtype"] );
 
         prf="$"+f;
         if (sch[f].hasOwnProperty("#proj")) {
            prf=sch[f]["#proj"];
         } 
+
+        if (f=="_id") continue;
+
         if (sch[f]["#pgtype"]!="varchar") {
            prf=ifnull(prf);
         } 
@@ -303,7 +312,7 @@ doSchema = function (dbname, coll, sample, debugopt) {
        pschema = prepSchema(sch, dbname, c);
 
        /* can keep doing this for other collections in this db */
-       for (t in pschema) {
+       for (var t in pschema) {
           generatePGSchema(t, pschema[t]);
        }
     });
