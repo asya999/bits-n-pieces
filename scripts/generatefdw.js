@@ -1,3 +1,4 @@
+doView=true;
 debugOn=false;
 depth=0;
 
@@ -25,7 +26,7 @@ schema_to_view=function(sch) {
          if (f.startsWith("#")) continue;
          if (!s.hasOwnProperty(f)) continue;
          if (!s[f].hasOwnProperty("#pgtype")) continue;
-         if (s[f]["#type"]=="2d") {
+         if (s[f]["#type"]=="2d") {  /* maybe - if we already handled array vs. obj then just use pgname */
              sv = sv + " " + f + '[1] AS "' + f + '.lon", ' + f + '[2] AS "' + f + '.lat",'
          } else if (fm.hasOwnProperty(s[f]["#pgname"])) {
             sv = sv + " " + s[f]["#pgname"] + " AS " + fm[s[f]["#pgname"]] + ",";
@@ -142,6 +143,7 @@ prepSchema = function(mschema, dbname, coll, tablename, result) {
 
     numRecords=mschema["#count"];
 
+    var fields = Object.keys(mschema);
     for (var field in mschema) {
         if ( ! mschema.hasOwnProperty(field) ) continue;
         if ( '__schema' == field ) continue;  /* skip metadata */
@@ -151,13 +153,25 @@ prepSchema = function(mschema, dbname, coll, tablename, result) {
         currentfield=mschema[field];
         
         if ( geo2d.indexOf(field) >= 0 ) {
+           /* need to handle two element array differently from two field subdocument */
            debug(field + " is a 2d index geo field!!!");
            currentfield["#type"]="2d";
-           currentfield["#proj"]=ifnull("$"+field, [null,null]);
-           delete(currentfield["#array"]);
-           result[tablename]["schema"][field]=currentfield;
-           result[tablename]["fieldmap"][field+"[1]"]=field+".lon";
-           result[tablename]["fieldmap"][field+"[2]"]=field+".lat";
+           if (currentfield["#array"]) {
+              currentfield["#type"]="2darray";
+              currentfield["#proj"]=ifnull("$"+field, [null,null]);
+              delete(currentfield["#array"]);
+              result[tablename]["schema"][field]=currentfield;
+              result[tablename]["viewmap"][field+"[1]"]=field+".lon";
+              result[tablename]["viewmap"][field+"[2]"]=field+".lat";
+           } else {  /* must be object with two fields */
+              var coords=fields.filter(function(z) { if (z.startsWith(field+".")) return z; });
+              if (coords.length!=2) throw "Why would there more more than two coordinates for " + field + "? ";
+              for (var c in coords) { 
+                  mschema[c]["#pgtype"]="numeric";
+                  mschema[c]["#type"]="number";
+              }
+              mschema[field]["#skip"]=true; /* skip top level, just get coords */
+           }
            continue;
         }
         /* here we could support separate table or same one for 2dsphere, depending on whether we support non-points */
@@ -166,11 +180,11 @@ prepSchema = function(mschema, dbname, coll, tablename, result) {
            currentfield["#type"]="2dsphere";
            currentfield["#proj"]=ifnull("$"+field+".coordinates", [null,null]);
            debug("Going to delete " + field+".type and " + field+".coordinates fields");
-           delete(mschema[field+".type"]);
-           delete(mschema[field+".coordinates"]);
+           mschema[field+".type"]["#skip"]=true;
+           mschema[field+".coordinates"]["#skip"]=true; // because we will use their values for top level?
            result[tablename]["schema"][field]=currentfield;
-           result[tablename]["fieldmap"][field+".coordinates[1]"]=field+".coordinates.lon";
-           result[tablename]["fieldmap"][field+".coordinates[2]"]=field+".coordinates.lat";
+           result[tablename]["viewmap"][field+".coordinates[1]"]=field+".coordinates.lon";
+           result[tablename]["viewmap"][field+".coordinates[2]"]=field+".coordinates.lat";
            continue;
         }
         /* if it's an array, we will send the whole thing into prepSchema by itself */
@@ -221,18 +235,20 @@ prepSchema = function(mschema, dbname, coll, tablename, result) {
     debug(sch);
     for (var f in sch) {
         if (!sch.hasOwnProperty(f)) continue;
+        if (sch[f].hasOwnProperty("#skip")) continue;
         if (f.startsWith("#") || f.startsWith("__")) continue;
         /*  unfinished - if the field name isn't legal postgres column then we need to do some hoop jumping */
-        if (f.length>62) {  /* should check if it already has #pgname? */
+        if (f.length>62) {
            newf=f.replace(/ /g,'').slice(0,62);
            sch[f]["#pgname"]=newf;
            if (!needProj) needProj=true;
-           if ( !sch[f].hasOwnProperty("#proj") ) { 
+           /* looks like we don't need this because we will already do proj of existing to newf pgname
+           /* if ( !sch[f].hasOwnProperty("#proj") ) { 
               sch[f]["#proj"]={};
-              sch[f]["#proj"][newf]=ifnull("$"+f);
+              sch[f]["#proj"][newf]="$"+f;
            } else {
-              sch[f]["#proj"][newf]=f; // TEMPORARY
-           }
+              sch[f]["#proj"][newf]=f; // TEMPORARY - do we want whaever was in f's #proj ?
+           } */
            result[tablename]["fieldmap"][newf]=f;
         }
         if (typeof sch[f]["#type"] == "object") {
@@ -283,16 +299,20 @@ generatePGSchema = function(tablename, pgschema) {
     print(", fieldmap '", tojsononeline(pgschema.fieldmap), "'");
     print(");" );
 
-    print("-- view can be edited to transform field names further ");
-    print("CREATE VIEW " + tablename + "_view AS SELECT ");
-    print(schema_to_view(pgschema));
-    print(" FROM " + tablename + ";");
-    print("");
+    if (doView) {
+       print("-- view can be edited to transform field names further ");
+       print("CREATE VIEW " + tablename + "_view AS SELECT ");
+       print(schema_to_view(pgschema));
+       print(" FROM " + tablename + ";");
+       print("");
+    }
+
     pgpipe="";
 }
 
-doSchema = function (dbname, coll, sample, debugopt) {
-    if (debugopt!=undefined) debugOn=debugopt; 
+doSchema = function (dbname, coll, sample, debugOpt, doViewOpt) {
+    if (doViewOpt!=undefined) doView=doViewOpt; 
+    if (debugOpt!=undefined) debugOn=debugOpt; 
     if (sample==undefined) sample=100;
 
     colls=[];
