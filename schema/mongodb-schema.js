@@ -772,13 +772,12 @@ function prepSchema (mschema, dbname, coll, tablename, result) {
 }
 
 function generatePGSchema (tablename, pgschema) {
-    mongodb_srv="mongodb_srv2";
-    print("DROP FOREIGN TABLE IF EXISTS " + tablename + " CASCADE;");
+    mongodb_svr="mongodb_svr";
     print("DROP FOREIGN TABLE IF EXISTS " + tablename + "_fdw CASCADE;");
 
     print("CREATE FOREIGN TABLE " + tablename + "_fdw ( ", schema_stringify(pgschema.schema), " ) ");
 
-    print("   SERVER " + mongodb_srv + " OPTIONS(db '" + pgschema.dbname + "', collection '" + pgschema.coll + "'");
+    print("   SERVER " + mongodb_svr + " OPTIONS(db '" + pgschema.dbname + "', collection '" + pgschema.coll + "'");
     /* print(", fieldmap '", tojsononeline(pgschema.fieldmap), "'"); */
     if (pgschema.pipe.length> 0) print(", pipe '", tojsononeline(pgschema.pipe), "'");
     print(");" );
@@ -786,7 +785,8 @@ function generatePGSchema (tablename, pgschema) {
     if (doView) {
        print("-- view can be edited to transform field names further ");
        print("CREATE VIEW " + tablename + " AS SELECT ");
-       print(schema_to_view(pgschema));
+       if (xxxx) print(schema_to_view(pgschema));
+       else print(" * ");
        print(" FROM " + tablename + "_fdw;");
        print("");
     }
