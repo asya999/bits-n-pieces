@@ -51,7 +51,9 @@ function schema(documents, options) {
             for (var o in obj) {
                 if (!obj.hasOwnProperty(o)) continue;
                 /* do not flatten arrays! */
-                if (((typeof obj[o]) === 'object') && (!obj[o]["#array"]) && ([$t, $d].indexOf(o) === -1)) {
+                if (  ((typeof obj[o]) === 'object') && 
+                      (!obj[o]["#array"] || ((o=="coordinates") && (obj[o]["#array"]))) && 
+                      ([$t, $d].indexOf(o) === -1)  )  {
                     var flatObject = recursive(obj[o]);
                     for (var x in flatObject) {
                         if (!flatObject.hasOwnProperty(x)) continue;
@@ -521,8 +523,9 @@ function schema_to_view(sch) {
          if (!s.hasOwnProperty(f)) continue;
          if (f.startsWith("#")) continue;
          if (!s[f].hasOwnProperty("#pgtype")) continue;
-         if (s[f]["#type"]=="2d") {  /* maybe - if we already handled array vs. obj then just use pgname */
-             sv = sv + " " + f + '[1] AS "' + f + '.lon", ' + f + '[2] AS "' + f + '.lat",'
+         if (s[f].hasOwnProperty("#viewmap")) continue;
+         if (s[f]["#pgtype"]=="numeric[]") {
+             sv = sv + " " + JSON.stringify(f) + '[1] AS "' + f + '_longitude", ' + JSON.stringify(f) + '[2] AS "' + f + '_latitude",'
          } else if (fm.hasOwnProperty(s[f]["#pgname"])) {
             sv = sv + " " + s[f]["#pgname"] + " AS " + fm[s[f]["#pgname"]] + ",";
          } else if ( f.startsWith("Zip") || f.startsWith("zip") ) {
@@ -536,7 +539,7 @@ function schema_to_view(sch) {
       return sv.slice(0,-1);
 }
 
-functon schema_stringify(s) {
+function schema_stringify(s) {
       ss='';
       for (var f in s) {
          if (!s[f].hasOwnProperty("#pgtype")) continue;
@@ -591,32 +594,8 @@ function reduceType (types) {
      return null;
 }
 
-function ifnull (f, n) {
-    if (n==undefined) n=null;
-    ifn={};
-    ifn["$ifNull"]=[];
-    (ifn["$ifNull"]).push(f);
-    (ifn["$ifNull"]).push(n);
-    return ifn;
-}
-
-function ifempty (f, n) {
-    if (n==undefined) n=0;
-    ifc={};
-    ifc["$cond"]=[];
-    ifo={};
-    ifo["$eq"]=[];
-    ifo["$eq"].push(f);
-    ifo["$eq"].push("");
-    ifc["$cond"].push(ifo);
-    ifc["$cond"].push(n);  /* maybe should be {"$literal":n} */
-    ifc["$cond"].push(f);
-    return ifc;
-}
-
 geo2d=[];
 geo2dsphere=[];
-arrays=[];
 
 function prepSchema (mschema, dbname, coll, tablename, result) {
     if (depth==0) topLevel=true;
@@ -634,16 +613,21 @@ function prepSchema (mschema, dbname, coll, tablename, result) {
     if (!result[tablename].hasOwnProperty("schema")) result[tablename]["schema"]={};
     if (!result[tablename].hasOwnProperty("pipe")) result[tablename]["pipe"]=[];
     if (!result[tablename].hasOwnProperty("fieldmap")) result[tablename]["fieldmap"]={};
+    if (!result[tablename].hasOwnProperty("viewmap")) result[tablename]["viewmap"]={};
 
     debug("Depth is " + depth + " " + dbname + " " + tablename + " result is " + tojson(result));
 
     numRecords=mschema["#count"];
 
     var fields = Object.keys(mschema);
+    /* first pass is to figure out schema details, handle embedded arrays, etc */
     for (var field in mschema) {
+
         if ( ! mschema.hasOwnProperty(field) ) continue;
         if ( '__schema' == field ) continue;  /* skip metadata */
         if ( field.startsWith("#") ) continue;  /* skip metadata */
+        if ( mschema[field].hasOwnProperty("#skip") && mschema[field]["#skip"] ) continue;
+
         debug("doing field ********************** " + field);
 
         currentfield=mschema[field];
@@ -656,8 +640,10 @@ function prepSchema (mschema, dbname, coll, tablename, result) {
               currentfield["#type"]="2darray";
               delete(currentfield["#array"]);
               result[tablename]["schema"][field]=currentfield;
-              result[tablename]["viewmap"][field+"[1]"]=field+".lon";
-              result[tablename]["viewmap"][field+"[2]"]=field+".lat";
+              /* result[tablename]["viewmap"][field+"[1]"]=field+"_lon";
+              result[tablename]["viewmap"][field+"[2]"]=field+"_lat";
+              result[tablename][field+"[1]"][field+"[2]"]=field+"_lat";
+              currentfield["#pgname"]="numeric"; */
            } else {  /* must be object with two fields */
               var coords=fields.filter(function(z) { if (z.startsWith(field+".")) return z; });
               if (coords.length!=2) throw "Why would there more more than two coordinates for " + field + "? ";
@@ -673,19 +659,34 @@ function prepSchema (mschema, dbname, coll, tablename, result) {
         if ( geo2dsphere.indexOf(field) >= 0 ) {
            debug(field + " is a 2dsphere index geo field!!!");
            currentfield["#type"]="2dsphere";
-           debug("Going to delete " + field+".type and " + field+".coordinates fields");
+           mschema[field+".coordinates"]["#type"]="2dsphere";
+           /* debug("Going to delete " + field+".type and " + field+".coordinates fields"); */
+           if (mschema.hasOwnProperty(field+".coordinates") && mschema[field+".coordinates"]["#array"]) {
+               delete(mschema[field+".coordinates"]["#array"]);
+               result[tablename]["schema"][field+".coordinates"]={};
+               for (g in mschema[field+".coordinates"])
+                     result[tablename]["schema"][field+".coordinates"][g]=mschema[field+".coordinates"][g];
+               result[tablename]["schema"][field+".coordinates"]["#type"]="2dsphere";
+               result[tablename]["viewmap"][field+".coordinates[1]"]=field+"_longitude";
+               result[tablename]["viewmap"][field+".coordinates[2]"]=field+"_latitude";
+           } else {
+               var coords=fields.filter(function(z) { if (z.startsWith(field+".coordinates.")) return z; });
+               for (var c in coords) { 
+                  mschema[c]["#pgtype"]="numeric";
+                  mschema[c]["#type"]="number";
+               }
+               result[tablename]["viewmap"][field+".coordinates[1]"]=field+".coordinates.lon";
+               result[tablename]["viewmap"][field+".coordinates[2]"]=field+".coordinates.lat";
+           }
            mschema[field+".type"]["#skip"]=true;
-           mschema[field+".coordinates"]["#skip"]=true; // because we will use their values for top level?
-           result[tablename]["schema"][field]=currentfield;
-           result[tablename]["viewmap"][field+".coordinates[1]"]=field+".coordinates.lon";
-           result[tablename]["viewmap"][field+".coordinates[2]"]=field+".coordinates.lat";
+           mschema[field]["#skip"]=true;
            continue;
         }
         /* if it's an array, we will send the whole thing into prepSchema by itself */
         if ( currentfield.hasOwnProperty("#array") && currentfield["#array"] ) {
            debug("currentfield has #array=true field is " + field);
            delete(currentfield["#array"]);
-           subtable=tablename+"__"+field;
+           subtable=tablename+"__"+field.replace(/\./g,'_');
            result[subtable]={};
            result[subtable]["pipe"]=[];
            result[subtable]["pipe"].push({"$unwind":'$'+field});
@@ -736,14 +737,6 @@ function prepSchema (mschema, dbname, coll, tablename, result) {
            newf=f.replace(/ /g,'').slice(0,62);
            sch[f]["#pgname"]=newf;
            if (!needProj) needProj=true;
-           /* looks like we don't need this because we will already do proj of existing to newf pgname
-           /* if ( !sch[f].hasOwnProperty("#proj") ) { 
-              sch[f]["#proj"]={};
-              sch[f]["#proj"][newf]="$"+f;
-           } else {
-              sch[f]["#proj"][newf]=f; // TEMPORARY - do we want whaever was in f's #proj ?
-           } */
-           result[tablename]["fieldmap"][newf]=f;
         }
         if (typeof sch[f]["#type"] == "object") {
           types=[]
@@ -781,19 +774,20 @@ function prepSchema (mschema, dbname, coll, tablename, result) {
 function generatePGSchema (tablename, pgschema) {
     mongodb_srv="mongodb_srv2";
     print("DROP FOREIGN TABLE IF EXISTS " + tablename + " CASCADE;");
+    print("DROP FOREIGN TABLE IF EXISTS " + tablename + "_fdw CASCADE;");
 
-    print("CREATE FOREIGN TABLE " + tablename + " ( ", schema_stringify(pgschema.schema), " ) ");
+    print("CREATE FOREIGN TABLE " + tablename + "_fdw ( ", schema_stringify(pgschema.schema), " ) ");
 
     print("   SERVER " + mongodb_srv + " OPTIONS(db '" + pgschema.dbname + "', collection '" + pgschema.coll + "'");
+    /* print(", fieldmap '", tojsononeline(pgschema.fieldmap), "'"); */
     if (pgschema.pipe.length> 0) print(", pipe '", tojsononeline(pgschema.pipe), "'");
-    print(", fieldmap '", tojsononeline(pgschema.fieldmap), "'");
     print(");" );
 
     if (doView) {
        print("-- view can be edited to transform field names further ");
-       print("CREATE VIEW " + tablename + "_view AS SELECT ");
+       print("CREATE VIEW " + tablename + " AS SELECT ");
        print(schema_to_view(pgschema));
-       print(" FROM " + tablename + ";");
+       print(" FROM " + tablename + "_fdw;");
        print("");
     }
 
@@ -816,8 +810,8 @@ function makeSchema(dbname, coll, sample, debugOpt, doViewOpt) {
 
        options={};
        options={flat:true};
-       var sch=schema(cursor, options);
        // var sch=db.getSiblingDB(dbname).getCollection(coll).schema({flat:true});
+       var sch=schema(cursor, options);
 
        /* try to figure out if there are any geo fields */
        db.getSiblingDB(dbname).getCollection(c).getIndexes().forEach(function(i) { 
