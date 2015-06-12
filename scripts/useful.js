@@ -137,7 +137,7 @@ printOneAll = function () {
        var mydb = db;
        db.getCollectionNames().forEach(function(z) {
              if (z.lastIndexOf("system.",0)===0) return;
-             print(z + Array((20-z.length)).join(' ') +" \t " + mydb.getCollection(z).count());
+             print(z + Array((40-z.length)).join(' ') +" \t " + mydb.getCollection(z).count());
              printjson(mydb.getCollection(z).findOne());
        });  
 }
