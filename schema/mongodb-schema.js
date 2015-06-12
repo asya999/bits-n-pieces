@@ -1,3 +1,11 @@
+var doView;
+var debugOn=false;
+var depth=0;
+var mongodb_svr="mongodb_srv2";
+var includeFields=[];
+var excludeFields=[];
+var schemaFilter={};
+
 /**
  * calculates schema of a collection by sampling some of the documents
  * and outputs approximately "equivalent" relational schema
@@ -8,9 +16,9 @@
  *                 data: true/false    run data sampling and return information about data
  *                 filter: {...}       only return fields/subfields that match the filter
  *
- * @returns {Object} the schema document with counts ($count), types ($type),
- *                   an array flag ($array) and probability of occurrence
- *                   given the parent field ($prob).
+ * @returns {Object} the schema document with counts (#count), types (#type),
+ *                   an array flag (#array) and probability of occurrence
+ *                   given the parent field (#prob).
  */
 function schema(documents, options) {
     var SCHEMA_VERSION = "0.6.0";
@@ -51,13 +59,14 @@ function schema(documents, options) {
             for (var o in obj) {
                 if (!obj.hasOwnProperty(o)) continue;
                 /* do not flatten arrays! */
-                if (  ((typeof obj[o]) === 'object') && 
-                      (!obj[o]["#array"] || ((o=="coordinates") && (obj[o]["#array"]))) && 
-                      ([$t, $d].indexOf(o) === -1)  )  {
+                if ( (  ((typeof obj[o]) === 'object')
+                        && (!obj[o]["#array"])
+                        && ([$t, $d].indexOf(o) === -1) )
+                        || (o=="coordinates")
+                   )  {
                     var flatObject = recursive(obj[o]);
                     for (var x in flatObject) {
                         if (!flatObject.hasOwnProperty(x)) continue;
-                        
                         result[o + '.' + x] = flatObject[x];
                     }
                 } else {
@@ -495,10 +504,6 @@ function schema(documents, options) {
     return schema;
 }
 
-var doView=true;
-var debugOn=false;
-var depth=0;
-
 function debug(x) {
    if (debugOn) print("DEBUG: " + Array(depth).join('          ') + x);
 }
@@ -557,7 +562,7 @@ function mapType( t ) {
     }
     debug("mapType: really type " + t);
     if ( [ "boolean", "objectid", "text", "string", "category", "null" ].indexOf(t) >= 0 ) return "varchar";
-    if ( [ "2d", "2dsphere" ].indexOf(t) >= 0 ) return "numeric[]";
+    if ( [ "2d", "2darray", "2dsphere" ].indexOf(t) >= 0 ) return "numeric[]";
     if ( [ "number" ].indexOf(t) >= 0 ) return "numeric";
     if ( [ "date" ].indexOf(t) >= 0 ) return "timestamp";
     /* skipping boolean since Multicorn doesn't handle queries on them */
@@ -574,10 +579,10 @@ function firstKeyName (o) {
 
 /* if passed in a list of types, then return dominant simple type out of it */
 function reduceType (types) {
-     debug("reduceType: " + tojson(types));
+     debug("reduceType: " + tojsononeline(types));
      /* if not array or object ready to return */
      if (typeof(types)!="object") return types;
-     debug("Types is " + tojson(types));
+     debug("Types is " + tojsononeline(types));
      if (types.length==1) return types[0];
      if (types.length==0) return "null";
      if ( types.indexOf("null") >= 0 ) {
@@ -601,9 +606,9 @@ function prepSchema (mschema, dbname, coll, tablename, result) {
     if (depth==0) topLevel=true;
     else topLevel=false;
     depth++;
-    debug(tojson(mschema));
+    debug("prepSchema: " + tojsononeline(mschema));
 
-    if (tablename==coll) throw "cannot be passed in tablename same as collection name";
+    if (tablename==coll) throw "do not pass tablename that is same as collection name";
     if (tablename==undefined) tablename=coll;
 
     if (result==undefined) result={};
@@ -615,7 +620,7 @@ function prepSchema (mschema, dbname, coll, tablename, result) {
     if (!result[tablename].hasOwnProperty("fieldmap")) result[tablename]["fieldmap"]={};
     if (!result[tablename].hasOwnProperty("viewmap")) result[tablename]["viewmap"]={};
 
-    debug("Depth is " + depth + " " + dbname + " " + tablename + " result is " + tojson(result));
+    debug("prepSchema: Depth is " + depth + " " + dbname + " " + tablename + " result is " + tojsononeline(result));
 
     numRecords=mschema["#count"];
 
@@ -628,9 +633,9 @@ function prepSchema (mschema, dbname, coll, tablename, result) {
         if ( field.startsWith("#") ) continue;  /* skip metadata */
         if ( mschema[field].hasOwnProperty("#skip") && mschema[field]["#skip"] ) continue;
 
-        debug("doing field ********************** " + field);
+        debug("prepSchema: doing field ********************** " + field);
 
-        currentfield=mschema[field];
+        var currentfield=mschema[field];
         
         if ( geo2d.indexOf(field) >= 0 ) {
            /* need to handle two element array differently from two field subdocument */
@@ -684,12 +689,17 @@ function prepSchema (mschema, dbname, coll, tablename, result) {
         }
         /* if it's an array, we will send the whole thing into prepSchema by itself */
         if ( currentfield.hasOwnProperty("#array") && currentfield["#array"] ) {
-           debug("currentfield has #array=true field is " + field);
+           debug("prepSchema: currentfield has #array=true field is " + field);
            delete(currentfield["#array"]);
-           subtable=tablename+"__"+field.replace(/\./g,'_');
+           subtable=tablename+subsep+field; /* .replace(/\./g,'_'); */
            result[subtable]={};
+           result[subtable]["parent_table"]=tablename;
            result[subtable]["pipe"]=[];
+           result[subtable]["pipe"]=result[subtable]["pipe"].concat(result[tablename]["pipe"]);
            result[subtable]["pipe"].push({"$unwind":'$'+field});
+           debug("Deep " + depth);
+           debug(tojson(result[tablename]["pipe"]));
+           debug(tojson(result[subtable]["pipe"]));
            result[subtable]["fieldmap"]={};
            fschema={}
            if (currentfield["#type"]=="object" || currentfield["#type"].hasOwnProperty("object") ) {
@@ -714,7 +724,7 @@ function prepSchema (mschema, dbname, coll, tablename, result) {
            delete(currentfield);
            continue;
         }
-        debug("left with field " + field + " currentfield is " + tojsononeline(currentfield));
+        debug("prepSchema: left with field " + field + " currentfield is " + tojsononeline(currentfield));
         result[tablename]["schema"][field]={};
         for (var g in currentfield) {
            if (currentfield.hasOwnProperty(g)) result[tablename]["schema"][field][g]=currentfield[g];
@@ -726,8 +736,8 @@ function prepSchema (mschema, dbname, coll, tablename, result) {
     needProj = false;
 
     sch = result[tablename]["schema"];
-    debug("Table is " + tablename);
-    debug(sch);
+    debug("prepSchema: Table is " + tablename);
+    debug(tojson(sch));
     for (var f in sch) {
         if (!sch.hasOwnProperty(f)) continue;
         if (sch[f].hasOwnProperty("#skip")) continue;
@@ -772,35 +782,48 @@ function prepSchema (mschema, dbname, coll, tablename, result) {
 }
 
 function generatePGSchema (tablename, pgschema) {
-    mongodb_svr="mongodb_svr";
-    print("DROP FOREIGN TABLE IF EXISTS " + tablename + "_fdw CASCADE;");
+    print('DROP FOREIGN TABLE IF EXISTS "' + tablename + '_fdw" CASCADE;');
 
-    print("CREATE FOREIGN TABLE " + tablename + "_fdw ( ", schema_stringify(pgschema.schema), " ) ");
+    print('CREATE FOREIGN TABLE "' + tablename + '_fdw" ( ', schema_stringify(pgschema.schema), " ) ");
 
     print("   SERVER " + mongodb_svr + " OPTIONS(db '" + pgschema.dbname + "', collection '" + pgschema.coll + "'");
     /* print(", fieldmap '", tojsononeline(pgschema.fieldmap), "'"); */
     if (pgschema.pipe.length> 0) print(", pipe '", tojsononeline(pgschema.pipe), "'");
     print(");" );
-
-    if (doView) {
-       print("-- view can be edited to transform field names further ");
-       print("CREATE VIEW " + tablename + " AS SELECT ");
-       if (xxxx) print(schema_to_view(pgschema));
-       else print(" * ");
-       print(" FROM " + tablename + "_fdw;");
-       print("");
-    }
-
-    pgpipe="";
 }
 
-function makeSchema(dbname, coll, sample, debugOpt, doViewOpt) {
-    if (doViewOpt!=undefined) doView=doViewOpt; 
-    if (debugOpt!=undefined) debugOn=debugOpt; 
-    if (sample==undefined) sample=100;
+function generatePGView (tablename, pgschema) {
+    print("-- view can be edited to transform field names further ");
+    print("CREATE VIEW " + tablename + " AS SELECT ");
+    // if (doView) print(schema_to_view(pgschema));
+    // else 
+       print(" * ");
+    print(" FROM " + tablename + "_fdw;");
+    print("");
+}
 
-    debug("db "+dbname + " coll " + coll + " sample " + sample + " debug " + debugOpt + " view " + doViewOpt);
+function mergeIntoJoin(tschema, pschema) {
+     var jschema = {};
+     jschema["pipe"]= tschema["pipe"];
+     jschema["dbname"]= tschema["dbname"];
+     jschema["coll"]= tschema["coll"];
+     jschema["schema"]= {}
+     /* merge schema elements of t and parent of t */
+     for (var f in tschema["schema"]) {
+        if ( ! tschema["schema"].hasOwnProperty(f) ) continue;
+         jschema["schema"][f] = tschema["schema"][f];
+     }
+     for (var f in pschema["schema"]) {
+         if ( ! pschema["schema"].hasOwnProperty(f) ) continue;
+         jschema["schema"][f] = pschema["schema"][f];
+     }
+     return jschema;
+}
+function makeSchema(dbname, coll, sample) {
+
+    debug("makeSchema: db "+dbname + " coll " + coll + " sample " + sample + " debug " + debugOn + " view " + doView);
     colls=[];
+    /* if this function can be called for DB to make schema for all collections, then */
     /* if (coll == undefined) colls=db.getSiblingDB(dbname).getCollectionNames()  else  */
     colls.push(coll);
 
@@ -808,24 +831,43 @@ function makeSchema(dbname, coll, sample, debugOpt, doViewOpt) {
 
        var cursor = db.getSiblingDB(dbname).getCollection(coll).find({}, null, sample /* limit */, 0 /* skip*/, 0 /* batchSize */);
 
-       options={};
-       options={flat:true};
-       // var sch=db.getSiblingDB(dbname).getCollection(coll).schema({flat:true});
-       var sch=schema(cursor, options);
+       opts={};
+       opts={flat:true};
+       var sch=schema(cursor, opts);
 
-       /* try to figure out if there are any geo fields */
+       /* figure out if there are any geo fields */
        db.getSiblingDB(dbname).getCollection(c).getIndexes().forEach(function(i) { 
            if (i.name.endsWith("2d")) geo2d.push(firstKeyName(i.key)); 
            if (i.name.endsWith("2dsphere")) geo2dsphere.push(firstKeyName(i.key)); 
        });
    
-       debug("Colling pschema with " + tojson(sch));
+       debug("makeSchema: Colling pschema with " + tojson(sch));
        /* transform contents of sch into result */
        pschema = prepSchema(sch, dbname, c);
 
+       var numTables=0;
        /* can keep doing this for other collections in this db */
        for (var t in pschema) {
+          debug("t is " + t);
+          debug(tojson(pschema[t]));
           generatePGSchema(t, pschema[t]);
+          numTables = numTables+1;
+          if (doView) generatePGView(t, pschema[t]);
+          if ( numTables > 1 && pschema[t].hasOwnProperty("parent_table")) {
+             print('-- generating join table with parent --');
+             parentTable=pschema[t]["parent_table"];
+             tShortName=t.slice(t.indexOf(subsep)+subsep.length);
+             joinT=parentTable+"_inner_join_"+tShortName;
+             var ijschema = mergeIntoJoin( pschema[t], pschema[parentTable] );
+             generatePGSchema(joinT, ijschema);
+             if (doView) generatePGView(joinT, ijschema);
+             if ( numTables > 2 && pschema[parentTable].hasOwnProperty("parent_table")) {
+                 var joinT2 = pschema[parentTable]["parent_table"]+"_inner_join_"+joinT;
+                 var ijjschema = mergeIntoJoin( ijschema, pschema[pschema[parentTable]["parent_table"]]);
+                 generatePGSchema(joinT2, ijjschema);
+                 if (doView) generatePGView(joinT2, ijjschema);
+             }
+          }
        }
     });
 }
@@ -841,13 +883,26 @@ function makeSchema(dbname, coll, sample, debugOpt, doViewOpt) {
 if (typeof DBCollection !== 'undefined') {
     DBCollection.prototype.makeSchema = function(options) {
         
-        // default options
-        var options = options || {};
-        sample = options.sample || 100;
-        debugOn=options.debugOpt || false;
-        viewOpt=options.doView || false;
+       // default options
+       var options = options || {};
+       sample = options.sample || 100;
+       debugOn=options.debug || false;
+       doView=options.view && true;
+       subsep=options.separator || "__";
+       maxdepth=options.maxdepth || 50;
+       includeFields=options.includeFields || [];
+       excludeFields=options.excludeFields || [];
+       schemaFilter=options.filter || null;
 
-        return makeSchema(this._db.getName(), this._shortName, sample, debugOn, viewOpt);
+       debug("doView is " + doView + " options.view is " + options.view);
+
+       if (excludeFields.length > 0 && includeFields.length > 0) throw "Only specify include or exclude fields, not both";
+       if (includeFields.length > 0 && schemaFilter != null ) throw "Only specify include or schema filter, not both";
+
+       if (schemaFilter != null) {
+          includeFields = Object.keys(schemaFilter);
+       }
+       return makeSchema(this._db.getName(), this._shortName, sample);
     }
 
     DBCollection.prototype.schema = function(options) {
