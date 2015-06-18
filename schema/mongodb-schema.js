@@ -1,10 +1,17 @@
-var doView;
+var doView=true;
 var debugOn=false;
 var depth=0;
 var mongodb_svr="mongodb_srv2";
 var includeFields=[];
 var excludeFields=[];
 var schemaFilter={};
+var sample = 100;
+var subsep="__";
+var maxdepth=5;
+var geo2d=[];
+var geo2dsphere=[];
+
+
 
 /**
  * calculates schema of a collection by sampling some of the documents
@@ -599,9 +606,6 @@ function reduceType (types) {
      return null;
 }
 
-geo2d=[];
-geo2dsphere=[];
-
 function prepSchema (mschema, dbname, coll, tablename, result) {
     if (depth==0) topLevel=true;
     else topLevel=false;
@@ -651,8 +655,10 @@ function prepSchema (mschema, dbname, coll, tablename, result) {
               currentfield["#pgname"]="numeric"; */
            } else {  /* must be object with two fields */
               var coords=fields.filter(function(z) { if (z.startsWith(field+".")) return z; });
+              debug("coords: " + tojson(coords));
               if (coords.length!=2) throw "Why would there more more than two coordinates for " + field + "? ";
               for (var c in coords) { 
+                  mschema[c]={};
                   mschema[c]["#pgtype"]="numeric";
                   mschema[c]["#type"]="number";
               }
@@ -823,17 +829,20 @@ function makeSchema(dbname, coll, sample) {
 
     debug("makeSchema: db "+dbname + " coll " + coll + " sample " + sample + " debug " + debugOn + " view " + doView);
     colls=[];
-    /* if this function can be called for DB to make schema for all collections, then */
-    /* if (coll == undefined) colls=db.getSiblingDB(dbname).getCollectionNames()  else  */
+    /* this function can be called for DB to make schema for every collection */
+    if (coll == undefined) colls=db.getSiblingDB(dbname).getCollectionNames(); else 
     colls.push(coll);
 
     colls.forEach(function(c) {
 
-       var cursor = db.getSiblingDB(dbname).getCollection(coll).find({}, null, sample /* limit */, 0 /* skip*/, 0 /* batchSize */);
+       var cursor = db.getSiblingDB(dbname).getCollection(c).find({}, null, sample /* limit */, 0 /* skip*/, 0 /* batchSize */);
 
        opts={};
        opts={flat:true};
        var sch=schema(cursor, opts);
+
+       geo2d=[];
+       geo2dsphere=[];
 
        /* figure out if there are any geo fields */
        db.getSiblingDB(dbname).getCollection(c).getIndexes().forEach(function(i) { 
@@ -885,6 +894,8 @@ if (typeof DBCollection !== 'undefined') {
         
        // default options
        var options = options || {};
+       debugOn=false;
+       doView=true;
        sample = options.sample || 100;
        debugOn=options.debug || false;
        doView=options.view && true;
