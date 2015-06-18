@@ -788,6 +788,8 @@ function prepSchema (mschema, dbname, coll, tablename, result) {
 }
 
 function generatePGSchema (tablename, pgschema) {
+    print('DROP VIEW IF EXISTS "' + tablename + '";');
+    print('DROP TABLE IF EXISTS "' + tablename + '";');
     print('DROP FOREIGN TABLE IF EXISTS "' + tablename + '_fdw" CASCADE;');
 
     print('CREATE FOREIGN TABLE "' + tablename + '_fdw" ( ', schema_stringify(pgschema.schema), " ) ");
@@ -899,7 +901,7 @@ if (typeof DBCollection !== 'undefined') {
        doView=true;
        sample = options.sample || 100;
        debugOn=options.debug || false;
-       doView=options.view && true;
+       if (options.view!=undefined) doView=options.view;
        subsep=options.separator || "__";
        maxdepth=options.maxdepth || 50;
        includeFields=options.includeFields || [];
