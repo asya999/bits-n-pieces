@@ -827,6 +827,7 @@ function mergeIntoJoin(tschema, pschema) {
 }
 function makeSchema(dbname, coll, sample) {
 
+    if (sample==undefined) sample=100;
     debug("makeSchema: db "+dbname + " coll " + coll + " sample " + sample + " debug " + debugOn + " view " + doView);
     colls=[];
     /* this function can be called for DB to make schema for every collection */
