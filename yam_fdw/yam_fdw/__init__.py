@@ -6,6 +6,7 @@ from multicorn import ForeignDataWrapper
 from multicorn.utils import log_to_postgres as log2pg
 
 from pymongo import MongoClient
+from pymongo import ASCENDING
 from dateutil.parser import parse
 
 from functools import partial
@@ -25,6 +26,7 @@ def coltype_formatter(coltype):
     else:
         return None
 
+# unused
 class Transform(SONManipulator):
 
     def __init__(self, columns):
@@ -65,16 +67,17 @@ class Yamfdw(ForeignDataWrapper):
 
         self.db = getattr(self.c, self.db_name)
         self.coll = getattr(self.db, self.collection_name)
+        log2pg('db: {} collection: {}'.format(self.db_name, self.collection_name))
 
         # if we need to validate or transform any fields this is a place to do it
         # we need column definitions for types to validate we're passing back correct types
         # self.db.add_son_manipulator(Transform(columns))
 
-        log2pg('cols: {}'.format(columns))
+        log2pg('collection cols: {}'.format(columns))
         self.fields = {col: {'formatter': coltype_formatter(coldef.type_name),
                              'path': col.split('.')} for (col, coldef) in columns.items()}
 
-        # if we need to rename - map old names to new names
+        # if we need to rename fields/columns - this will map old names to new names
         self.fieldmap = options.get('fieldmap')
         if self.fieldmap:
             self.fieldmap = json.loads(self.fieldmap)
@@ -82,6 +85,16 @@ class Yamfdw(ForeignDataWrapper):
         if self.pipe:
             self.pipe = json.loads(self.pipe)
             log2pg('pipe is {}'.format(self.pipe))
+        self.stats = self.db.command("collstats", self.collection_name)
+        self.count=self.stats["count"]
+        self.pkeys = [ (('_id',), 1), ]
+        # maybe only for those that have indexes?
+        #fields = {k: True for k in columns}
+        #for f in fields:
+        #    if f=='_id': continue
+        #    # could check for unique indexes and set those to 1
+        #    cnt = len(self.coll.distinct(f))
+        #    self.pkeys.append( ((f,), self.count/cnt) )
 
     def build_spec(self, quals):
         Q = {}
@@ -100,7 +113,7 @@ class Yamfdw(ForeignDataWrapper):
 
         for qual in quals:
             val_formatter = self.fields[qual.field_name]['formatter']
-            vform = lambda val: val_formatter(val) if val_formatter is not None else val
+            vform = lambda val: val_formatter(val) if val is not None and val_formatter is not None else val
             log2pg('Qual {} field_name: {} operator: {} value: {}'.format(qual, qual.field_name, qual.operator, qual.value))
             if qual.operator == '=':
                 Q[qual.field_name] = vform(qual.value)
@@ -121,13 +134,29 @@ class Yamfdw(ForeignDataWrapper):
 
         return Q
 
+    def get_rel_size(self, quals, columns):
+        # this could be a call to explain 
+        width = len(columns) * self.stats["avgObjSize"]
+        num_rows = self.count
+        if quals: 
+            if len(quals)==1 and quals[0].field_name=='_id': num_rows=1
+            #else: 
+               #Q = self.build_spec(quals)
+               #num_rows = self.coll.find(Q).count()
+        return (num_rows, width)
+
+    def get_path_keys(self):
+        return self.pkeys
+
     def execute(self, quals, columns):
 
         t0 = time.time()
         ## Only request fields of interest:
         fields = {k: True for k in columns}
         projectFields=fields
-        if '_id' not in fields:
+        if len(fields)==0:
+            fields['_id'] = True
+        if '_id' not in fields and len(fields)>0:
             fields['_id'] = False
 
         Q = self.build_spec(quals)
@@ -189,6 +218,9 @@ class Yamfdw(ForeignDataWrapper):
             log2pg('Calling find')
             if Q: cur = self.coll.find(spec=Q, fields=fields)
             else: cur = self.coll.find(fields=fields)
+
+            if len(fields)==1 and "_id" in fields:
+              cur=cur.hint([("_id",ASCENDING)])
 
         t1 = time.time()
         log2pg('cur is returned {} with total {} so far'.format(cur,t1-t0))
