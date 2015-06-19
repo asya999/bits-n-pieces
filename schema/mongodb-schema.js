@@ -788,6 +788,7 @@ function prepSchema (mschema, dbname, coll, tablename, result) {
 }
 
 function generatePGSchema (tablename, pgschema) {
+    print('SET client_min_messages = error;');
     print('DROP VIEW IF EXISTS "' + tablename + '";');
     print('DROP TABLE IF EXISTS "' + tablename + '";');
     print('DROP FOREIGN TABLE IF EXISTS "' + tablename + '_fdw" CASCADE;');
