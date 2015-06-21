@@ -1,7 +1,7 @@
 var doView=true;
 var debugOn=false;
 var depth=0;
-var mongodb_svr="mongodb_srv2";
+var mongodb_svr="mongodb_server";
 var includeFields=[];
 var excludeFields=[];
 var schemaFilter={};
@@ -568,8 +568,9 @@ function mapType( t ) {
       t=ttype;
     }
     debug("mapType: really type " + t);
-    if ( [ "boolean", "objectid", "text", "string", "category", "null" ].indexOf(t) >= 0 ) return "varchar";
+    if ( [ "objectid", "text", "string", "category", "null" ].indexOf(t) >= 0 ) return "varchar";
     if ( [ "2d", "2darray", "2dsphere" ].indexOf(t) >= 0 ) return "numeric[]";
+    if ( [ "boolean" ].indexOf(t) >= 0 ) return "boolean";
     if ( [ "number" ].indexOf(t) >= 0 ) return "numeric";
     if ( [ "date" ].indexOf(t) >= 0 ) return "timestamp";
     /* skipping boolean since Multicorn doesn't handle queries on them */
