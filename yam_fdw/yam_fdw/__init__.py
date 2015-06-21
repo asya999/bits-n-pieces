@@ -67,13 +67,14 @@ class Yamfdw(ForeignDataWrapper):
 
         self.db = getattr(self.c, self.db_name)
         self.coll = getattr(self.db, self.collection_name)
-        log2pg('db: {} collection: {}'.format(self.db_name, self.collection_name))
+
+        self.debug = options.get('debug', False)
 
         # if we need to validate or transform any fields this is a place to do it
         # we need column definitions for types to validate we're passing back correct types
         # self.db.add_son_manipulator(Transform(columns))
 
-        log2pg('collection cols: {}'.format(columns))
+        if self.debug: log2pg('collection cols: {}'.format(columns))
         self.fields = {col: {'formatter': coltype_formatter(coldef.type_name),
                              'path': col.split('.')} for (col, coldef) in columns.items()}
 
@@ -84,12 +85,11 @@ class Yamfdw(ForeignDataWrapper):
         self.pipe = options.get('pipe')
         if self.pipe:
             self.pipe = json.loads(self.pipe)
-            log2pg('pipe is {}'.format(self.pipe))
+            if self.debug: log2pg('pipe is {}'.format(self.pipe))
         self.stats = self.db.command("collstats", self.collection_name)
         self.count=self.stats["count"]
         self.pkeys = [ (('_id',), 1), ]
-        # maybe only for those that have indexes?
-        #fields = {k: True for k in columns}
+        fields = {k: True for k in columns}
         #for f in fields:
         #    if f=='_id': continue
         #    # could check for unique indexes and set those to 1
@@ -98,8 +98,6 @@ class Yamfdw(ForeignDataWrapper):
 
     def build_spec(self, quals):
         Q = {}
-
-        log2pg('Quals passed in are {}'.format(quals))
 
         comp_mapper = {'>': '$gt',
                        '>=': '$gte',
@@ -114,23 +112,21 @@ class Yamfdw(ForeignDataWrapper):
         for qual in quals:
             val_formatter = self.fields[qual.field_name]['formatter']
             vform = lambda val: val_formatter(val) if val is not None and val_formatter is not None else val
-            log2pg('Qual {} field_name: {} operator: {} value: {}'.format(qual, qual.field_name, qual.operator, qual.value))
+            if self.debug: log2pg('Qual field_name: {} operator: {} value: {}'.format(qual.field_name, qual.operator, qual.value))
             if qual.operator == '=':
                 Q[qual.field_name] = vform(qual.value)
 
-            elif qual.operator == '~~':
-                # need to replace % with real regex for now % to .*
-                comp = Q.setdefault(qual.field_name, {})
-                comp[comp_mapper[qual.operator]] = vform(qual.value.replace('%','.*'))
-                Q[qual.field_name] = comp
 
             elif qual.operator in comp_mapper:
                 comp = Q.setdefault(qual.field_name, {})
-                comp[comp_mapper[qual.operator]] = vform(qual.value)
+                if qual.operator == '~~': 
+                   comp[comp_mapper[qual.operator]] = vform(qual.value.replace('%','.*'))
+                else: 
+                   comp[comp_mapper[qual.operator]] = vform(qual.value)
                 Q[qual.field_name] = comp
 
             else:
-                log2pg('Qual operator {} not implemented yet: {}'.format(qual.operator, qual))
+                log2pg('Qual operator {} not implemented yet for value {}'.format(qual.operator, qual.value))
 
         return Q
 
@@ -161,10 +157,10 @@ class Yamfdw(ForeignDataWrapper):
 
         Q = self.build_spec(quals)
 
-        log2pg('fields: {}'.format(quals))
-        log2pg('spec: {}'.format(Q))
-        log2pg('fields: {}'.format(columns))
-        log2pg('fields: {}'.format(fields))
+        if self.debug: log2pg('fields: {}'.format(quals))
+        if self.debug: log2pg('spec: {}'.format(Q))
+        if self.debug: log2pg('fields: {}'.format(columns))
+        if self.debug: log2pg('fields: {}'.format(fields))
 
         # fieldmap can handle the following transformations:
         # illegal column names for PG translated into new names, maps name to name via name
@@ -210,12 +206,12 @@ class Yamfdw(ForeignDataWrapper):
             if Q:
                 pipe.insert(0, { "$match" : Q } )
             if projectFields>0 and projectFields<len(columns): pipe.append( { "$project" : fields } )
-            log2pg('Calling aggregate with {} stage pipe {} '.format(len(pipe),pipe))
+            if self.debug: log2pg('Calling aggregate with {} stage pipe {} '.format(len(pipe),pipe))
             cur = self.coll.aggregate(pipe, cursor={})
         else:
             # need to make these positional so that it won't break in pymongo 3.0
             # if there was field transformation then there cannot be *no* pipeline
-            log2pg('Calling find')
+            if self.debug: log2pg('Calling find')
             if Q: cur = self.coll.find(spec=Q, fields=fields)
             else: cur = self.coll.find(fields=fields)
 
@@ -223,12 +219,12 @@ class Yamfdw(ForeignDataWrapper):
               cur=cur.hint([("_id",ASCENDING)])
 
         t1 = time.time()
-        log2pg('cur is returned {} with total {} so far'.format(cur,t1-t0))
+        if self.debug: log2pg('cur is returned {} with total {} so far'.format(cur,t1-t0))
         for doc in cur:
             yield {col: dict_traverser(self.fields[col]['path'], doc) for col in columns}
 
         t2 = time.time()
-        log2pg('duration of operation in Python is {}'.format(t2-t0))
+        if self.debug: log2pg('duration of operation in Python is {}'.format(t2-t0))
 
 ## Local Variables: ***
 ## mode:python ***
