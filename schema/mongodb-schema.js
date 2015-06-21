@@ -790,8 +790,6 @@ function prepSchema (mschema, dbname, coll, tablename, result) {
 
 function generatePGSchema (tablename, pgschema) {
     print('SET client_min_messages = error;');
-    print('DROP VIEW IF EXISTS "' + tablename + '";');
-    print('DROP TABLE IF EXISTS "' + tablename + '";');
     print('DROP FOREIGN TABLE IF EXISTS "' + tablename + '_fdw" CASCADE;');
 
     print('CREATE FOREIGN TABLE "' + tablename + '_fdw" ( ', schema_stringify(pgschema.schema), " ) ");
@@ -804,11 +802,11 @@ function generatePGSchema (tablename, pgschema) {
 
 function generatePGView (tablename, pgschema) {
     print("-- view can be edited to transform field names further ");
-    print("CREATE VIEW " + tablename + " AS SELECT ");
+    print("CREATE VIEW \"" + tablename + "\" AS SELECT ");
     // if (doView) print(schema_to_view(pgschema));
     // else 
        print(" * ");
-    print(" FROM " + tablename + "_fdw;");
+    print(" FROM \"" + tablename + "_fdw\";");
     print("");
 }
 
