@@ -114,7 +114,8 @@ class Yamfdw(ForeignDataWrapper):
             vform = lambda val: val_formatter(val) if val is not None and val_formatter is not None else val
             if self.debug: log2pg('Qual field_name: {} operator: {} value: {}'.format(qual.field_name, qual.operator, qual.value))
             if qual.operator == '=':
-                Q[qual.field_name] = vform(qual.value)
+                if qual.field_name != '_id': Q[qual.field_name] = vform(qual.value)
+                else: Q[qual.field_name] = vform(qual.value) # TODO need to convert string to ObjectId()
 
 
             elif qual.operator in comp_mapper:
@@ -219,12 +220,14 @@ class Yamfdw(ForeignDataWrapper):
               cur=cur.hint([("_id",ASCENDING)])
 
         t1 = time.time()
+        docCount=0
         if self.debug: log2pg('cur is returned {} with total {} so far'.format(cur,t1-t0))
         for doc in cur:
             yield {col: dict_traverser(self.fields[col]['path'], doc) for col in columns}
+            docCount=docCount+1
 
         t2 = time.time()
-        if self.debug: log2pg('duration of operation in Python is {}'.format(t2-t0))
+        log2pg('Python_rows {}, Python_duration {} {} {}ms'.format(docCount,(t1-t0)*1000,(t2-t1)*1000,(t2-t0)*1000))
 
 ## Local Variables: ***
 ## mode:python ***
