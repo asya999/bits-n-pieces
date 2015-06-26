@@ -1,7 +1,8 @@
 var doView=true;
 var debugOn=false;
 var depth=0;
-var mongodb_svr="mongodb_server";
+var mongodb_svr="mongo_server";
+var databaseOption="db";
 var includeFields=[];
 var excludeFields=[];
 var schemaFilter={};
@@ -789,12 +790,14 @@ function prepSchema (mschema, dbname, coll, tablename, result) {
 }
 
 function generatePGSchema (tablename, pgschema) {
-    print('SET client_min_messages = error;');
     print('DROP FOREIGN TABLE IF EXISTS "' + tablename + '_fdw" CASCADE;');
+    print('DROP TABLE IF EXISTS "' + tablename + '" CASCADE;');
+    print('DROP VIEW IF EXISTS "' + tablename + '" CASCADE;');
 
     print('CREATE FOREIGN TABLE "' + tablename + '_fdw" ( ', schema_stringify(pgschema.schema), " ) ");
 
-    print("   SERVER " + mongodb_svr + " OPTIONS(db '" + pgschema.dbname + "', collection '" + pgschema.coll + "'");
+    print("   SERVER " + mongodb_svr + " OPTIONS(" + databaseOption + " '" + pgschema.dbname + "', collection '" + pgschema.coll + "'");
+    /* print("   SERVER " + mongodb_svr + " OPTIONS(db '" + pgschema.dbname + "', collection '" + pgschema.coll + "'"); */
     /* print(", fieldmap '", tojsononeline(pgschema.fieldmap), "'"); */
     if (pgschema.pipe.length> 0) print(", pipe '", tojsononeline(pgschema.pipe), "'");
     print(");" );
@@ -827,14 +830,39 @@ function mergeIntoJoin(tschema, pschema) {
      }
      return jschema;
 }
-function makeSchema(dbname, coll, sample) {
+function makeSchema(dbname, coll, options) {
 
-    if (sample==undefined) sample=100;
-    debug("makeSchema: db "+dbname + " coll " + coll + " sample " + sample + " debug " + debugOn + " view " + doView);
+    // default options
+    var options = options || {};
+    debugOn=options.debug || false;
+    doView=true;
+    if (options.view!=undefined) doView=options.view;
+    sample = options.sample || 100;
+    subsep=options.separator || "__";
+    maxdepth=options.maxdepth || 50;
+    includeFields=options.includeFields || [];
+    excludeFields=options.excludeFields || [];
+    schemaFilter=options.filter || null;
+    mongodb_svr= options.serverName || "mongo_server";
+    databaseOption= options.databaseOption || "db";
+
+    debug("doView is " + doView + " options.view is " + options.view);
+
+    if (excludeFields.length > 0 && includeFields.length > 0) throw "Only specify include or exclude fields, not both";
+    if (includeFields.length > 0 && schemaFilter != null ) throw "Only specify include or schema filter, not both";
+
+    if (schemaFilter != null) {
+       includeFields = Object.keys(schemaFilter);
+    }
+
+    debug("makeSchema: " + databaseOption + " "+dbname + " coll " + coll + " sample " + sample + " debug " + debugOn + " view " + doView);
+
     colls=[];
     /* this function can be called for DB to make schema for every collection */
     if (coll == undefined) colls=db.getSiblingDB(dbname).getCollectionNames(); else 
     colls.push(coll);
+    /* set error level onces */
+    print('SET client_min_messages = error;');
 
     colls.forEach(function(c) {
 
@@ -874,7 +902,7 @@ function makeSchema(dbname, coll, sample) {
              generatePGSchema(joinT, ijschema);
              if (doView) generatePGView(joinT, ijschema);
              if ( numTables > 2 && pschema[parentTable].hasOwnProperty("parent_table")) {
-                 var joinT2 = pschema[parentTable]["parent_table"]+"_inner_join_"+joinT;
+                 var joinT2 = parentTable+"_inner_join_"+joinT;
                  var ijjschema = mergeIntoJoin( ijschema, pschema[pschema[parentTable]["parent_table"]]);
                  generatePGSchema(joinT2, ijjschema);
                  if (doView) generatePGView(joinT2, ijjschema);
@@ -895,28 +923,7 @@ function makeSchema(dbname, coll, sample) {
 if (typeof DBCollection !== 'undefined') {
     DBCollection.prototype.makeSchema = function(options) {
         
-       // default options
-       var options = options || {};
-       debugOn=false;
-       doView=true;
-       sample = options.sample || 100;
-       debugOn=options.debug || false;
-       if (options.view!=undefined) doView=options.view;
-       subsep=options.separator || "__";
-       maxdepth=options.maxdepth || 50;
-       includeFields=options.includeFields || [];
-       excludeFields=options.excludeFields || [];
-       schemaFilter=options.filter || null;
-
-       debug("doView is " + doView + " options.view is " + options.view);
-
-       if (excludeFields.length > 0 && includeFields.length > 0) throw "Only specify include or exclude fields, not both";
-       if (includeFields.length > 0 && schemaFilter != null ) throw "Only specify include or schema filter, not both";
-
-       if (schemaFilter != null) {
-          includeFields = Object.keys(schemaFilter);
-       }
-       return makeSchema(this._db.getName(), this._shortName, sample);
+       return makeSchema(this._db.getName(), this._shortName, options);
     }
 
     DBCollection.prototype.schema = function(options) {
