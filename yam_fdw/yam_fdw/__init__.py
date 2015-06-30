@@ -8,6 +8,7 @@ from multicorn.utils import log_to_postgres as log2pg
 from pymongo import MongoClient
 from pymongo import ASCENDING
 from dateutil.parser import parse
+from bson.objectid import ObjectId
 
 from functools import partial
 
@@ -20,9 +21,11 @@ dict_traverser = partial(reduce,
                          lambda x, y: x.get(y) if type(x) == dict else x)
 
 
-def coltype_formatter(coltype):
+def coltype_formatter(coltype, otype):
     if coltype in ('timestamp without time zone', 'timestamp with time zone', 'date'):
         return lambda x: x if hasattr(x, 'isoformat') else parse(x)
+    elif otype=='ObjectId':
+        return lambda x: ObjectId(x)
     else:
         return None
 
@@ -75,138 +78,172 @@ class Yamfdw(ForeignDataWrapper):
         # self.db.add_son_manipulator(Transform(columns))
 
         if self.debug: log2pg('collection cols: {}'.format(columns))
-        self.fields = {col: {'formatter': coltype_formatter(coldef.type_name),
+
+        self.stats = self.db.command("collstats", self.collection_name)
+        self.count=self.stats["count"]
+        if self.debug: log2pg('self.stats: {} '.format(self.stats))
+
+        self.indexes=[]
+        if self.stats["nindexes"]>1:
+           indexdict = self.coll.index_information()
+           self.indexes = {idesc['key'][0][0]: idesc.get('unique',False)  for iname, idesc in indexdict.iteritems()}
+           if self.debug: log2pg('self.indexes: {} '.format(self.indexes))
+
+        self.fields = {col: {'formatter': coltype_formatter(coldef.type_name, coldef.options.get('type',None)),
+                             'options': coldef.options,
                              'path': col.split('.')} for (col, coldef) in columns.items()}
 
-        # if we need to rename fields/columns - this will map old names to new names
-        self.fieldmap = options.get('fieldmap')
-        if self.fieldmap:
-            self.fieldmap = json.loads(self.fieldmap)
+        if self.debug: log2pg('self.fields: {} \n columns.items {}'.format(self.fields,columns.items()))
+
         self.pipe = options.get('pipe')
         if self.pipe:
             self.pipe = json.loads(self.pipe)
             if self.debug: log2pg('pipe is {}'.format(self.pipe))
-        self.stats = self.db.command("collstats", self.collection_name)
-        self.count=self.stats["count"]
-        self.pkeys = [ (('_id',), 1), ]
-        fields = {k: True for k in columns}
-        #for f in fields:
-        #    if f=='_id': continue
-        #    # could check for unique indexes and set those to 1
-        #    cnt = len(self.coll.distinct(f))
-        #    self.pkeys.append( ((f,), self.count/cnt) )
-
-    def build_spec(self, quals):
+            self.objarray={}
+            self.arrayfields=[]
+            for i in range(len(self.pipe)):
+              try:
+                arr=self.pipe[i]['$unwind']
+              except:
+                continue
+              self.objarray[arr]=False
+              for f in self.fields:
+                 if f.startswith(arr+'.'):
+                    self.objarray[arr]=True
+                    self.arrayfields.append(f)
+        else:
+            self.pkeys = [ (('_id',), 1), ]
+            #fields = {k: True for k in columns}
+            for f in self.fields: # if we want to calculate selectivity of each field (once per session)
+                if f=='_id': continue
+                # could check for unique indexes and set those to 1
+                if f in self.indexes and self.indexes.get(f): 
+                   self.pkeys.append( ((f,), 1) )
+                elif f in self.indexes:
+                   self.pkeys.append( ((f,), min((self.count/10),1000) ) )
+                else: 
+                   self.pkeys.append( ((f,), self.count) )
+    
+    def build_spec(self, quals, trans=True):
         Q = {}
 
         comp_mapper = {'>': '$gt',
                        '>=': '$gte',
                        '<=': '$lte',
                        '<>': '$ne',
+                       '=': '$eq',
                        '<' : '$lt',
                        (u'=', True) : '$in',
                        (u'<>', False) : '$nin',
                        '~~': '$regex'
+        # TODO '!~~', '~~*', '!~~*', other binary ones that are composable
                       }
 
         for qual in quals:
             val_formatter = self.fields[qual.field_name]['formatter']
             vform = lambda val: val_formatter(val) if val is not None and val_formatter is not None else val
-            if self.debug: log2pg('Qual field_name: {} operator: {} value: {}'.format(qual.field_name, qual.operator, qual.value))
-            if qual.operator == '=':
-                if qual.field_name != '_id': Q[qual.field_name] = vform(qual.value)
-                else: Q[qual.field_name] = vform(qual.value) # TODO need to convert string to ObjectId()
-
-
-            elif qual.operator in comp_mapper:
-                comp = Q.setdefault(qual.field_name, {})
-                if qual.operator == '~~': 
-                   comp[comp_mapper[qual.operator]] = vform(qual.value.replace('%','.*'))
-                else: 
-                   comp[comp_mapper[qual.operator]] = vform(qual.value)
-                Q[qual.field_name] = comp
-
+            if self.debug: log2pg('vform {} val_formatter: {} '.format(vform, val_formatter))
+            if trans and 'options' in self.fields[qual.field_name] and 'mname' in self.fields[qual.field_name]['options']:
+               mongo_field_name=self.fields[qual.field_name]['options']['mname']
             else:
-                log2pg('Qual operator {} not implemented yet for value {}'.format(qual.operator, qual.value))
+               mongo_field_name=qual.field_name
+            if self.debug: log2pg('Qual field_name: {} operator: {} value: {}'.format(mongo_field_name, qual.operator, qual.value))
+            if qual.operator in comp_mapper:
+               comp = Q.setdefault(mongo_field_name, {})
+               if qual.operator == '~~': 
+                  comp[comp_mapper[qual.operator]] = vform(qual.value.replace('%','.*'))
+               else: 
+                  comp[comp_mapper[qual.operator]] = vform(qual.value)
+               Q[mongo_field_name] = comp
+               if self.debug: log2pg('Qual {} comp {}'.format(qual.operator, qual.value))
+            else:
+               log2pg('Qual operator {} not implemented yet for value {}'.format(qual.operator, qual.value))
 
         return Q
 
     def get_rel_size(self, quals, columns):
-        # this could be a call to explain 
-        width = len(columns) * self.stats["avgObjSize"]
+        width = len(columns) * min(24, (self.stats["avgObjSize"]/len(self.fields)))
         num_rows = self.count
-        if quals: 
-            if len(quals)==1 and quals[0].field_name=='_id': num_rows=1
-            #else: 
-               #Q = self.build_spec(quals)
-               #num_rows = self.coll.find(Q).count()
+        if self.pipe: num_rows=self.count*10
+        else:
+           if quals: 
+              fields=[q.field_name for q in quals]
+              if '_id' in fields: num_rows=1
+              else: 
+                  # this part can only be allowed if Q is indexed, otherwise very bad
+                  fields=[q.field_name in self.indexes for q in quals]
+                  if True in fields:
+                      Q = self.build_spec(quals)
+                      num_rows = self.coll.find(Q).count()
         return (num_rows, width)
 
     def get_path_keys(self):
-        return self.pkeys
+        return getattr(self, 'pkeys', [])
 
     def execute(self, quals, columns):
 
-        t0 = time.time()
-        ## Only request fields of interest:
-        fields = {k: True for k in columns}
-        projectFields=fields
-        if len(fields)==0:
-            fields['_id'] = True
-        if '_id' not in fields and len(fields)>0:
+      if self.debug: t0 = time.time()
+      ## Only request fields of interest:
+      fields = {k: True for k in columns}
+
+      Q = self.build_spec(quals)
+
+      if len(fields)==0:    # no fields need to be returned, just get counts
+
+        if not self.pipe:
+            docCount = self.coll.find(Q).count()
+        else:   # there's a pipe with unwind
+            arr=self.pipe[0]['$unwind']    # may not be safe assumption in the future
+            countpipe=[]
+            if Q: countpipe.append({'$match':Q})
+            # hack: everyone just gets array size, 
+            # TODO: this only works for one $unwind for now
+            countpipe.append({'$project':{'_id':0, 'arrsize': {'$size':arr}}})
+            countpipe.append({'$group':{'_id':None,'sum':{'$sum':'$arrsize'}}})
+            cur = self.coll.aggregate(countpipe, cursor={})
+            for res in cur:
+               docCount=res['sum']
+               break
+
+        for x in xrange(docCount):
+            yield { }
+
+        # we are done
+        if self.debug: t1 = time.time()
+
+      else:  # we have more than one field requested, with or without pipe
+
+        if '_id' not in fields:
             fields['_id'] = False
 
-        Q = self.build_spec(quals)
-
-        if self.debug: log2pg('fields: {}'.format(quals))
-        if self.debug: log2pg('spec: {}'.format(Q))
         if self.debug: log2pg('fields: {}'.format(columns))
         if self.debug: log2pg('fields: {}'.format(fields))
 
-        # fieldmap can handle the following transformations:
-        # illegal column names for PG translated into new names, maps name to name via name
-        # mixed data types stores all non-primary types for inclusion in comparisons
-        #if self.fieldmap:
-        #    # transform Q to pre-pgnames 
-        #    for f in Q:
-        #        if f in self.fieldmap:
-        #            newQ[self.fieldmap[f]]=Q[f]
-        #        else:
-        #            newQ[f]=Q[f]
-
         pipe = []
-        needPipe=True
-        #needPipe=False
-        #if self.pipe:
-        #    # instead of pipe.extend(self.pipe)
-        #    # iterate over pipe finding "$project" and only keeping the keys in fields
-        #    for stage in self.pipe:
-        #       if "$project" in stage:
-        #          newproj={} # build new $project
-        #          isnotone=0
-        #          for f in stage["$project"]:
-        #              if f in fields: 
-        #                 newproj[f] = stage["$project"][f] 
-        #                 if newproj[f]!=1: isnotone+=1
-        #          if newproj and isnotone>0:
-        #              stage["$project"]=newproj
-        #              pipe.append(stage)
-        #       else:
-        #          pipe.append(stage);
+        projectFields={}
+        transkeys = [k for k in self.fields.keys() if 'mname' in self.fields[k].get('options',{})]
+        transfields = set(fields.keys()) & set(transkeys)
+        if self.debug: log2pg('transfields {} fieldskeys {} transkeys {}'.format(transfields,fields.keys(),transkeys))
+        for f in fields:         # there are some fields wanted returned which must be transformed
+           if self.debug: log2pg('f {} hasoptions {} self.field[f] {}'.format(f,'options' in self.fields[f],self.fields[f]))
+           if 'options' in self.fields[f] and 'mname' in self.fields[f]['options']:
+               if self.debug: log2pg('self field {} options {}'.format(f,self.fields[f]['options']['mname']))
+               projectFields[f]='$'+self.fields[f]['options']['mname']
+           else:
+               projectFields[f]=fields[f]
 
-         
-        #    if len(pipe)>0: needPipe=True
+        if self.debug: log2pg('projectFields: {}'.format(projectFields))
 
-        #if Q:
-           # add $match stage with pre-fields at the beginning
-           #pipe.insert(0, { "$match" : newQ } )
-           # pipe.append( { "$match" : Q } )
-
-        if self.pipe:
-            pipe.extend(self.pipe)
-            if Q:
-                pipe.insert(0, { "$match" : Q } )
-            if projectFields>0 and projectFields<len(columns): pipe.append( { "$project" : fields } )
+        if self.pipe or transfields:
+            if self.pipe: pipe.extend(self.pipe)
+            if Q: pipe.insert(0, { "$match" : Q } )
+            if transfields: 
+                pipe.append( { "$project" : projectFields } )
+                if Q:
+                   # only needed if quals fields are array members, can check that TODO
+                   postQ= self.build_spec(quals, False)
+                   if Q != postQ: pipe.append( { "$match" : postQ } )
+                
             if self.debug: log2pg('Calling aggregate with {} stage pipe {} '.format(len(pipe),pipe))
             cur = self.coll.aggregate(pipe, cursor={})
         else:
@@ -219,15 +256,15 @@ class Yamfdw(ForeignDataWrapper):
             if len(fields)==1 and "_id" in fields:
               cur=cur.hint([("_id",ASCENDING)])
 
-        t1 = time.time()
-        docCount=0
+        if self.debug: t1 = time.time()
+        if self.debug: docCount=0
         if self.debug: log2pg('cur is returned {} with total {} so far'.format(cur,t1-t0))
         for doc in cur:
             yield {col: dict_traverser(self.fields[col]['path'], doc) for col in columns}
-            docCount=docCount+1
+            if self.debug: docCount=docCount+1
 
-        t2 = time.time()
-        log2pg('Python_rows {}, Python_duration {} {} {}ms'.format(docCount,(t1-t0)*1000,(t2-t1)*1000,(t2-t0)*1000))
+      if self.debug: t2 = time.time()
+      if self.debug: log2pg('Python rows {} Python_duration {} {} {}ms'.format(docCount,(t1-t0)*1000,(t2-t1)*1000,(t2-t0)*1000))
 
 ## Local Variables: ***
 ## mode:python ***
