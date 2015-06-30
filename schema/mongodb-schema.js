@@ -13,7 +13,6 @@ var geo2d=[];
 var geo2dsphere=[];
 
 
-
 /**
  * calculates schema of a collection by sampling some of the documents
  * and outputs approximately "equivalent" relational schema
@@ -528,35 +527,22 @@ var allTypes = {
     "array"   : 7
 };
 
-function schema_to_view(sch) {
-      sv='';  /* format is column, column, column as newname, etc */
-      if (sch.hasOwnProperty("fieldmap")) fm=sch.fieldmap;
-      var s=sch.schema;
-      for (var f in s) {
-         if (!s.hasOwnProperty(f)) continue;
-         if (f.startsWith("#")) continue;
-         if (!s[f].hasOwnProperty("#pgtype")) continue;
-         if (s[f].hasOwnProperty("#viewmap")) continue;
-         if (s[f]["#pgtype"]=="numeric[]") {
-             sv = sv + " " + JSON.stringify(f) + '[1] AS "' + f + '_longitude", ' + JSON.stringify(f) + '[2] AS "' + f + '_latitude",'
-         } else if (fm.hasOwnProperty(s[f]["#pgname"])) {
-            sv = sv + " " + s[f]["#pgname"] + " AS " + fm[s[f]["#pgname"]] + ",";
-         } else if ( f.startsWith("Zip") || f.startsWith("zip") ) {
-             sv = sv + ' "' + f + '", ' + ' substr("' + f + '", 1, 5) ' + ' AS "' + f + '_trim5",';
-         } else if (s[f]=="timestamp") {
-             sv = sv + " " + f + ", " + f + "::date AS " + f + "_as_date,";
-         } else {
-             sv = sv + " " + JSON.stringify(f) + ",";
-         }
-      }
-      return sv.slice(0,-1);
-}
-
 function schema_stringify(s) {
       ss='';
       for (var f in s) {
          if (!s[f].hasOwnProperty("#pgtype")) continue;
-         ss = ss + JSON.stringify(f) + " " + s[f]["#pgtype"] + ",";
+         columnname=f;
+         options="";
+         if (s[f]["#type"]=="objectid" || s[f].hasOwnProperty("#pgname")) {
+            options=" OPTIONS (";
+            if (s[f]["#type"]=="objectid") options += "type 'ObjectId',";
+            if (s[f].hasOwnProperty("#pgname")) { 
+               options += "mname '" + f + "',"; 
+               columnname=s[f]["#pgname"];
+            }
+            options=options.slice(0,-1)+")";
+         }
+         ss = ss + columnname + " " + s[f]["#pgtype"] + options + ",";
       }
       return ss.slice(0,-1);
 }
@@ -738,10 +724,6 @@ function prepSchema (mschema, dbname, coll, tablename, result) {
            if (currentfield.hasOwnProperty(g)) result[tablename]["schema"][field][g]=currentfield[g];
         }
     }
-    proj = {};
-    proj["$project"] = {};
-    pr = proj["$project"];
-    needProj = false;
 
     sch = result[tablename]["schema"];
     debug("prepSchema: Table is " + tablename);
@@ -750,11 +732,11 @@ function prepSchema (mschema, dbname, coll, tablename, result) {
         if (!sch.hasOwnProperty(f)) continue;
         if (sch[f].hasOwnProperty("#skip")) continue;
         if (f.startsWith("#") || f.startsWith("__")) continue;
-        /*  unfinished - if the field name isn't legal postgres column then we need to do some hoop jumping */
-        if (f.length>62) {
-           newf=f.replace(/ /g,'').slice(0,62);
+        /*  if the field name isn't legal postgres column then we need to add legal name */
+        /*  also normalize dots and upper case to allow living without having to double quote */
+        newf=f.replace(/ /g,'').replace(/\./g,'_').toLowerCase().slice(0,62)
+        if (newf!=f) {
            sch[f]["#pgname"]=newf;
-           if (!needProj) needProj=true;
         }
         if (typeof sch[f]["#type"] == "object") {
           types=[]
@@ -768,22 +750,6 @@ function prepSchema (mschema, dbname, coll, tablename, result) {
 
         // debug("field " + f + " was " + tojson(sch[f]["#type"]) + " but turned into " + sch[f]["#pgtype"] );
 
-        prf="$"+f;
-        if (sch[f].hasOwnProperty("#proj")) {
-           prf=sch[f]["#proj"];
-        } 
-
-        if (f=="_id") continue;
-
-        if (prf!="$"+f) {
-           if (!needProj) needProj=true;
-           pr[f]=prf;
-        } else {
-           pr[f]=1;
-        }
-    }
-    if (needProj) {
-        result[tablename]["pipe"].push(proj);
     }
     depth--;
     return result;
@@ -791,7 +757,6 @@ function prepSchema (mschema, dbname, coll, tablename, result) {
 
 function generatePGSchema (tablename, pgschema) {
     print('DROP FOREIGN TABLE IF EXISTS "' + tablename + '_fdw" CASCADE;');
-    print('DROP TABLE IF EXISTS "' + tablename + '" CASCADE;');
     print('DROP VIEW IF EXISTS "' + tablename + '" CASCADE;');
 
     print('CREATE FOREIGN TABLE "' + tablename + '_fdw" ( ', schema_stringify(pgschema.schema), " ) ");
@@ -805,10 +770,7 @@ function generatePGSchema (tablename, pgschema) {
 
 function generatePGView (tablename, pgschema) {
     print("-- view can be edited to transform field names further ");
-    print("CREATE VIEW \"" + tablename + "\" AS SELECT ");
-    // if (doView) print(schema_to_view(pgschema));
-    // else 
-       print(" * ");
+    print("CREATE VIEW \"" + tablename + "\" AS SELECT *");
     print(" FROM \"" + tablename + "_fdw\";");
     print("");
 }
