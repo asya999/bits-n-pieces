@@ -2,6 +2,7 @@ var doView=true;
 var generateVirtual=true;
 var generateJoin=true;
 var debugOn=false;
+var replaceDots=true;
 var depth=0;
 var mongodb_svr="mongo_server";
 var databaseOption="db";
@@ -544,7 +545,7 @@ function schema_stringify(s) {
             }
             options=options.slice(0,-1)+")";
          }
-         ss = ss + columnname + " " + s[f]["#pgtype"] + options + ",";
+         ss = ss + (replaceDots ? columnname : JSON.stringify(columnname) ) + " " + s[f]["#pgtype"] + options + ",";
       }
       return ss.slice(0,-1);
 }
@@ -603,7 +604,9 @@ function prepSchema (mschema, dbname, coll, tablename, result) {
     debug("prepSchema: " + tojsononeline(mschema));
 
     if (tablename==coll) throw "do not pass tablename that is same as collection name";
-    if (tablename==undefined) tablename=coll;
+    if (tablename==undefined) 
+       if ( replaceDots ) tablename=coll.replace(/\./g,'_');
+       else tablename=coll;
 
     if (result==undefined) result={};
     if (!result.hasOwnProperty(tablename)) result[tablename]={};
@@ -687,7 +690,7 @@ function prepSchema (mschema, dbname, coll, tablename, result) {
         if ( currentfield.hasOwnProperty("#array") && currentfield["#array"] ) {
            debug("prepSchema: currentfield has #array=true field is " + field);
            delete(currentfield["#array"]);
-           subtable=tablename+subsep+field; /* .replace(/\./g,'_'); */
+           subtable=tablename+subsep+field;
            result[subtable]={};
            result[subtable]["parent_table"]=tablename;
            result[subtable]["pipe"]=[];
@@ -736,7 +739,10 @@ function prepSchema (mschema, dbname, coll, tablename, result) {
         if (f.startsWith("#") || f.startsWith("__")) continue;
         /*  if the field name isn't legal postgres column then we need to add legal name */
         /*  also normalize dots and upper case to allow living without having to double quote */
-        newf=f.replace(/ /g,'').replace(/\./g,'_').toLowerCase().slice(0,62)
+        if ( replaceDots )
+            newf=f.replace(/ /g,'').replace(/\./g,'_').toLowerCase().slice(0,62)
+        else
+            newf=f.replace(/ /g,'').toLowerCase().slice(0,62)
         if (newf!=f) {
            sch[f]["#pgname"]=newf;
         }
@@ -802,9 +808,11 @@ function makeSchema(dbname, coll, options) {
     doView=true;
     generateVirtual=true;
     generateJoin=true;
+    replaceDots=true;
     if (options.view!=undefined) doView=options.view;
     if (options.virtual!=undefined) generateVirtual=options.virtual;
     if (options.join!=undefined) generateJoin=options.join;
+    if (options.replaceDots!=undefined) replaceDots=options.replaceDots;
     sample = options.sample || 100;
     subsep=options.separator || "__";
     maxdepth=options.maxdepth || 50;
