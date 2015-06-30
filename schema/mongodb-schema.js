@@ -614,8 +614,6 @@ function prepSchema (mschema, dbname, coll, tablename, result) {
     if (!result[tablename].hasOwnProperty("coll")) result[tablename]["coll"]=coll;
     if (!result[tablename].hasOwnProperty("schema")) result[tablename]["schema"]={};
     if (!result[tablename].hasOwnProperty("pipe")) result[tablename]["pipe"]=[];
-    if (!result[tablename].hasOwnProperty("fieldmap")) result[tablename]["fieldmap"]={};
-    if (!result[tablename].hasOwnProperty("viewmap")) result[tablename]["viewmap"]={};
 
     debug("prepSchema: Depth is " + depth + " " + dbname + " " + tablename + " result is " + tojsononeline(result));
 
@@ -639,13 +637,11 @@ function prepSchema (mschema, dbname, coll, tablename, result) {
            debug(field + " is a 2d index geo field!!!");
            currentfield["#type"]="2d";
            if (currentfield["#array"]) {
+              /* this will need to wait till $arrayElemAt lands */
               currentfield["#type"]="2darray";
               delete(currentfield["#array"]);
               result[tablename]["schema"][field]=currentfield;
-              /* result[tablename]["viewmap"][field+"[1]"]=field+"_lon";
-              result[tablename]["viewmap"][field+"[2]"]=field+"_lat";
               result[tablename][field+"[1]"][field+"[2]"]=field+"_lat";
-              currentfield["#pgname"]="numeric"; */
            } else {  /* must be object with two fields */
               var coords=fields.filter(function(z) { if (z.startsWith(field+".")) return z; });
               debug("coords: " + tojson(coords));
@@ -663,7 +659,9 @@ function prepSchema (mschema, dbname, coll, tablename, result) {
         if ( geo2dsphere.indexOf(field) >= 0 ) {
            debug(field + " is a 2dsphere index geo field!!!");
            currentfield["#type"]="2dsphere";
+           currentfield["#skip"]=true;
            mschema[field+".coordinates"]["#type"]="2dsphere";
+           mschema[field+".type"]["#skip"]=true;
            /* debug("Going to delete " + field+".type and " + field+".coordinates fields"); */
            if (mschema.hasOwnProperty(field+".coordinates") && mschema[field+".coordinates"]["#array"]) {
                delete(mschema[field+".coordinates"]["#array"]);
@@ -671,19 +669,13 @@ function prepSchema (mschema, dbname, coll, tablename, result) {
                for (g in mschema[field+".coordinates"])
                      result[tablename]["schema"][field+".coordinates"][g]=mschema[field+".coordinates"][g];
                result[tablename]["schema"][field+".coordinates"]["#type"]="2dsphere";
-               result[tablename]["viewmap"][field+".coordinates[1]"]=field+"_longitude";
-               result[tablename]["viewmap"][field+".coordinates[2]"]=field+"_latitude";
            } else {
                var coords=fields.filter(function(z) { if (z.startsWith(field+".coordinates.")) return z; });
                for (var c in coords) { 
                   mschema[c]["#pgtype"]="numeric";
                   mschema[c]["#type"]="number";
                }
-               result[tablename]["viewmap"][field+".coordinates[1]"]=field+".coordinates.lon";
-               result[tablename]["viewmap"][field+".coordinates[2]"]=field+".coordinates.lat";
            }
-           mschema[field+".type"]["#skip"]=true;
-           mschema[field]["#skip"]=true;
            continue;
         }
         /* if it's an array, we will send the whole thing into prepSchema by itself */
@@ -699,7 +691,6 @@ function prepSchema (mschema, dbname, coll, tablename, result) {
            debug("Deep " + depth);
            debug(tojson(result[tablename]["pipe"]));
            debug(tojson(result[subtable]["pipe"]));
-           result[subtable]["fieldmap"]={};
            fschema={}
            if (currentfield["#type"]=="object" || currentfield["#type"].hasOwnProperty("object") ) {
               fschema[field]={}
@@ -771,7 +762,6 @@ function generatePGSchema (tablename, pgschema) {
 
     print("   SERVER " + mongodb_svr + " OPTIONS(" + databaseOption + " '" + pgschema.dbname + "', collection '" + pgschema.coll + "'");
     /* print("   SERVER " + mongodb_svr + " OPTIONS(db '" + pgschema.dbname + "', collection '" + pgschema.coll + "'"); */
-    /* print(", fieldmap '", tojsononeline(pgschema.fieldmap), "'"); */
     if (pgschema.pipe.length> 0) print(", pipe '", tojsononeline(pgschema.pipe), "'");
     print(");" );
 }

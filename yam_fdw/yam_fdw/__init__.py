@@ -83,11 +83,11 @@ class Yamfdw(ForeignDataWrapper):
         self.count=self.stats["count"]
         if self.debug: log2pg('self.stats: {} '.format(self.stats))
 
-        self.indexes=[]
+        self.indexes={}
         if self.stats["nindexes"]>1:
-           indexdict = self.coll.index_information()
-           self.indexes = {idesc['key'][0][0]: idesc.get('unique',False)  for iname, idesc in indexdict.iteritems()}
-           if self.debug: log2pg('self.indexes: {} '.format(self.indexes))
+            indexdict = self.coll.index_information()
+            self.indexes = {idesc['key'][0][0]: idesc.get('unique',False)  for iname, idesc in indexdict.iteritems()}
+            if self.debug: log2pg('self.indexes: {} '.format(self.indexes))
 
         self.fields = {col: {'formatter': coltype_formatter(coldef.type_name, coldef.options.get('type',None)),
                              'options': coldef.options,
