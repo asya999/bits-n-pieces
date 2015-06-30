@@ -234,6 +234,7 @@ class Yamfdw(ForeignDataWrapper):
 
         if self.debug: log2pg('projectFields: {}'.format(projectFields))
 
+        # if there was field transformation we have to use the pipeline
         if self.pipe or transfields:
             if self.pipe: pipe.extend(self.pipe)
             if Q: pipe.insert(0, { "$match" : Q } )
@@ -247,11 +248,8 @@ class Yamfdw(ForeignDataWrapper):
             if self.debug: log2pg('Calling aggregate with {} stage pipe {} '.format(len(pipe),pipe))
             cur = self.coll.aggregate(pipe, cursor={})
         else:
-            # need to make these positional so that it won't break in pymongo 3.0
-            # if there was field transformation then there cannot be *no* pipeline
             if self.debug: log2pg('Calling find')
-            if Q: cur = self.coll.find(spec=Q, fields=fields)
-            else: cur = self.coll.find(fields=fields)
+            cur = self.coll.find(Q, fields)
 
             if len(fields)==1 and "_id" in fields:
               cur=cur.hint([("_id",ASCENDING)])
