@@ -180,7 +180,7 @@ class Yamfdw(ForeignDataWrapper):
     def get_path_keys(self):
         return getattr(self, 'pkeys', [])
 
-    def execute(self, quals, columns):
+    def execute(self, quals, columns, d={}):
 
       if self.debug: t0 = time.time()
       ## Only request fields of interest:
@@ -206,7 +206,7 @@ class Yamfdw(ForeignDataWrapper):
                break
 
         for x in xrange(docCount):
-            yield { }
+            yield d
 
         # we are done
         if self.debug: t1 = time.time()
