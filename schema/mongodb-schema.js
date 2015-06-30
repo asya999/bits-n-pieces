@@ -869,7 +869,7 @@ function makeSchema(dbname, coll, options) {
               generatePGSchema(t, pschema[t]);
               if (doView) generatePGView(t, pschema[t]);
           }
-          if ( pschema[t].hasOwnProperty("parent_table") && generateJoin) {
+          if ( pschema[t].hasOwnProperty("parent_table") && generateJoin ) {
              print('-- generating join table with parent --');
              parentTable=pschema[t]["parent_table"];
              tShortName=t.slice(t.indexOf(subsep)+subsep.length);
@@ -878,7 +878,7 @@ function makeSchema(dbname, coll, options) {
              generatePGSchema(joinT, ijschema);
              if (doView) generatePGView(joinT, ijschema);
              /* check for double join */
-             if ( pschema[parentTable].hasOwnProperty("parent_table")) {
+             if ( pschema[parentTable].hasOwnProperty("parent_table") && generateJoin ) {
                  var joinT2 = parentTable+"_inner_join_"+joinT;
                  var ijjschema = mergeIntoJoin( ijschema, pschema[pschema[parentTable]["parent_table"]]);
                  generatePGSchema(joinT2, ijjschema);
