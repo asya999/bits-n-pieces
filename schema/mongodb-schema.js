@@ -1,4 +1,6 @@
 var doView=true;
+var generateVirtual=true;
+var generateJoin=true;
 var debugOn=false;
 var depth=0;
 var mongodb_svr="mongo_server";
@@ -798,7 +800,11 @@ function makeSchema(dbname, coll, options) {
     var options = options || {};
     debugOn=options.debug || false;
     doView=true;
+    generateVirtual=true;
+    generateJoin=true;
     if (options.view!=undefined) doView=options.view;
+    if (options.virtual!=undefined) generateVirtual=options.virtual;
+    if (options.join!=undefined) generateJoin=options.join;
     sample = options.sample || 100;
     subsep=options.separator || "__";
     maxdepth=options.maxdepth || 50;
@@ -847,15 +853,15 @@ function makeSchema(dbname, coll, options) {
        /* transform contents of sch into result */
        pschema = prepSchema(sch, dbname, c);
 
-       var numTables=0;
        /* can keep doing this for other collections in this db */
        for (var t in pschema) {
           debug("t is " + t);
           debug(tojson(pschema[t]));
-          generatePGSchema(t, pschema[t]);
-          numTables = numTables+1;
-          if (doView) generatePGView(t, pschema[t]);
-          if ( numTables > 1 && pschema[t].hasOwnProperty("parent_table")) {
+          if ( !pschema[t].hasOwnProperty("parent_table") || generateVirtual ) {
+              generatePGSchema(t, pschema[t]);
+              if (doView) generatePGView(t, pschema[t]);
+          }
+          if ( pschema[t].hasOwnProperty("parent_table") && generateJoin) {
              print('-- generating join table with parent --');
              parentTable=pschema[t]["parent_table"];
              tShortName=t.slice(t.indexOf(subsep)+subsep.length);
@@ -863,7 +869,8 @@ function makeSchema(dbname, coll, options) {
              var ijschema = mergeIntoJoin( pschema[t], pschema[parentTable] );
              generatePGSchema(joinT, ijschema);
              if (doView) generatePGView(joinT, ijschema);
-             if ( numTables > 2 && pschema[parentTable].hasOwnProperty("parent_table")) {
+             /* check for double join */
+             if ( pschema[parentTable].hasOwnProperty("parent_table")) {
                  var joinT2 = parentTable+"_inner_join_"+joinT;
                  var ijjschema = mergeIntoJoin( ijschema, pschema[pschema[parentTable]["parent_table"]]);
                  generatePGSchema(joinT2, ijjschema);
