@@ -27,8 +27,7 @@ var geo2dsphere=[];
  *                 filter: {...}       only return fields/subfields that match the filter
  *
  * @returns {Object} the schema document with counts (#count), types (#type),
- *                   an array flag (#array) and probability of occurrence
- *                   given the parent field (#prob).
+ *                   an array flag (#array) 
  */
 function schema(documents, options) {
     var SCHEMA_VERSION = "0.6.0";
@@ -226,8 +225,7 @@ function schema(documents, options) {
     }
 
     /**
-     * clean up the output of _infer, collapsing single types and calculating 
-     * probabilities (stored in "$p" field)
+     * clean up the output of _infer, collapsing single types
      *
      * @param {Object} schema 
      * @param {Number} count keep track of count in recursive calls
@@ -247,9 +245,6 @@ function schema(documents, options) {
         }
 
         if (schema[$c] !== undefined) {
-            if (count) {
-                schema[$p] = schema[$c] / count;
-            }
             count = schema[$c];
         }
 
@@ -429,7 +424,6 @@ function schema(documents, options) {
         type: 'type', 
         data: 'data', 
         array: 'array', 
-        prob: 'prob', 
         other: 'other'
     }, options.metavars);
 
@@ -440,7 +434,6 @@ function schema(documents, options) {
         $t = options.metavars.prefix + options.metavars.type,
         $d = options.metavars.prefix + options.metavars.data,
         $a = options.metavars.prefix + options.metavars.array,
-        $p = options.metavars.prefix + options.metavars.prob,
         $o = options.metavars.prefix + options.metavars.other;
 
     // nested options.data 
@@ -563,8 +556,6 @@ function mapType( t ) {
     if ( [ "boolean" ].indexOf(t) >= 0 ) return "boolean";
     if ( [ "number" ].indexOf(t) >= 0 ) return "numeric";
     if ( [ "date" ].indexOf(t) >= 0 ) return "timestamp";
-    /* skipping boolean since Multicorn doesn't handle queries on them */
-    /* if ( [ "boolean" ].indexOf(t) >= 0 ) return "boolean"; */
 }
 
 function firstKeyName (o) {
@@ -617,8 +608,6 @@ function prepSchema (mschema, dbname, coll, tablename, result) {
 
     debug("prepSchema: Depth is " + depth + " " + dbname + " " + tablename + " result is " + tojsononeline(result));
 
-    numRecords=mschema["#count"];
-
     var fields = Object.keys(mschema);
     /* first pass is to figure out schema details, handle embedded arrays, etc */
     for (var field in mschema) {
@@ -631,7 +620,9 @@ function prepSchema (mschema, dbname, coll, tablename, result) {
         debug("prepSchema: doing field ********************** " + field);
 
         var currentfield=mschema[field];
-        
+
+        delete(currentfield["#count"]);
+
         if ( geo2d.indexOf(field) >= 0 ) {
            /* need to handle two element array differently from two field subdocument */
            debug(field + " is a 2d index geo field!!!");
@@ -662,7 +653,6 @@ function prepSchema (mschema, dbname, coll, tablename, result) {
            currentfield["#skip"]=true;
            mschema[field+".coordinates"]["#type"]="2dsphere";
            mschema[field+".type"]["#skip"]=true;
-           /* debug("Going to delete " + field+".type and " + field+".coordinates fields"); */
            if (mschema.hasOwnProperty(field+".coordinates") && mschema[field+".coordinates"]["#array"]) {
                delete(mschema[field+".coordinates"]["#array"]);
                result[tablename]["schema"][field+".coordinates"]={};
@@ -854,6 +844,8 @@ function makeSchema(dbname, coll, options) {
        /* transform contents of sch into result */
        pschema = prepSchema(sch, dbname, c);
 
+       /* TODO add option to output JSON schema here, OR go on to generate relational schema */
+
        /* can keep doing this for other collections in this db */
        for (var t in pschema) {
           debug("t is " + t);
@@ -882,8 +874,7 @@ function makeSchema(dbname, coll, options) {
  * @param {Object} options supports two options: {samples: 123, flat: true}
  *
  * @returns {Object} the schema document with counts ($c), types ($t),
- *                   an array flag ($a) and probability of occurrence
- *                   given the parent field ($p).
+ *                   an array flag ($a) 
  */
 if (typeof DBCollection !== 'undefined') {
     DBCollection.prototype.makeSchema = function(options) {
