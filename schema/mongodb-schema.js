@@ -605,8 +605,8 @@ function prepSchema (mschema, dbname, coll, tablename, result) {
 
     if (tablename==coll) throw "do not pass tablename that is same as collection name";
     if (tablename==undefined) 
-       if ( replaceDots ) tablename=coll.replace(/\./g,'_');
-       else tablename=coll;
+       if ( replaceDots ) tablename=coll.toLowerCase().replace(/\./g,'_');
+       else tablename=coll.toLowerCase();
 
     if (result==undefined) result={};
     if (!result.hasOwnProperty(tablename)) result[tablename]={};
@@ -655,7 +655,7 @@ function prepSchema (mschema, dbname, coll, tablename, result) {
            }
            continue;
         }
-        /* here we could support separate table or same one for 2dsphere, depending on whether we support non-points */
+        /* here we could support separate table or same one for 2dsphere, depending on whether there are non-points */
         if ( geo2dsphere.indexOf(field) >= 0 ) {
            debug(field + " is a 2dsphere index geo field!!!");
            currentfield["#type"]="2dsphere";
@@ -756,38 +756,41 @@ function prepSchema (mschema, dbname, coll, tablename, result) {
 
 function generatePGSchema (tablename, pgschema) {
     print('DROP FOREIGN TABLE IF EXISTS "' + tablename + '_fdw" CASCADE;');
-    print('DROP VIEW IF EXISTS "' + tablename + '" CASCADE;');
 
     print('CREATE FOREIGN TABLE "' + tablename + '_fdw" ( ', schema_stringify(pgschema.schema), " ) ");
 
     print("   SERVER " + mongodb_svr + " OPTIONS(" + databaseOption + " '" + pgschema.dbname + "', collection '" + pgschema.coll + "'");
-    /* print("   SERVER " + mongodb_svr + " OPTIONS(db '" + pgschema.dbname + "', collection '" + pgschema.coll + "'"); */
-    if (pgschema.pipe.length> 0) print(", pipe '", tojsononeline(pgschema.pipe), "'");
-    print(");" );
+
+    if (pgschema.pipe.length> 0) print(", pipe '", tojsononeline(pgschema.pipe), "' );");
+    else print(");" );
+
+    if (doView) generatePGView(tablename, pschema);
 }
 
 function generatePGView (tablename, pgschema) {
-    print("-- view can be edited to transform field names further ");
     print("CREATE VIEW \"" + tablename + "\" AS SELECT *");
     print(" FROM \"" + tablename + "_fdw\";");
     print("");
 }
 
 function mergeIntoJoin(tschema, pschema) {
+     debug("MergeIntoJoin: " + tojson(pschema));
+     debug("MergeIntoJoin: " + tojson(tschema));
      var jschema = {};
      jschema["pipe"]= tschema["pipe"];
      jschema["dbname"]= tschema["dbname"];
      jschema["coll"]= tschema["coll"];
      jschema["schema"]= {}
      /* merge schema elements of t and parent of t */
-     for (var f in tschema["schema"]) {
-        if ( ! tschema["schema"].hasOwnProperty(f) ) continue;
-         jschema["schema"][f] = tschema["schema"][f];
-     }
      for (var f in pschema["schema"]) {
-         if ( ! pschema["schema"].hasOwnProperty(f) ) continue;
+        if ( ! pschema["schema"].hasOwnProperty(f) ) continue;
          jschema["schema"][f] = pschema["schema"][f];
      }
+     for (var f in tschema["schema"]) {
+         if ( ! tschema["schema"].hasOwnProperty(f) ) continue;
+         jschema["schema"][f] = tschema["schema"][f];
+     }
+     debug("MergeIntoJoin: " + tojson(jschema));
      return jschema;
 }
 function makeSchema(dbname, coll, options) {
@@ -796,7 +799,7 @@ function makeSchema(dbname, coll, options) {
     var options = options || {};
     debugOn=options.debug || false;
     doView=true;
-    generateVirtual=true;
+    generateVirtual=false;
     generateJoin=true;
     replaceDots=true;
     if (options.view!=undefined) doView=options.view;
@@ -804,7 +807,7 @@ function makeSchema(dbname, coll, options) {
     if (options.join!=undefined) generateJoin=options.join;
     if (options.replaceDots!=undefined) replaceDots=options.replaceDots;
     sample = options.sample || 100;
-    subsep=options.separator || "__";
+    subsep=options.separator || "__"; /* TODO should make this the join separator? */
     maxdepth=options.maxdepth || 50;
     includeFields=options.includeFields || [];
     excludeFields=options.excludeFields || [];
@@ -857,23 +860,18 @@ function makeSchema(dbname, coll, options) {
           debug(tojson(pschema[t]));
           if ( !pschema[t].hasOwnProperty("parent_table") || generateVirtual ) {
               generatePGSchema(t, pschema[t]);
-              if (doView) generatePGView(t, pschema[t]);
           }
           if ( pschema[t].hasOwnProperty("parent_table") && generateJoin ) {
              print('-- generating join table with parent --');
-             parentTable=pschema[t]["parent_table"];
-             tShortName=t.slice(t.indexOf(subsep)+subsep.length);
+             parentTable=pschema[t]["parent_table"].replace(/__/g,'_inner_join_');
+             /* need the highest index of subsep */
+             tShortName=t.slice(t.lastIndexOf(subsep)+subsep.length);
              joinT=parentTable+"_inner_join_"+tShortName;
-             var ijschema = mergeIntoJoin( pschema[t], pschema[parentTable] );
-             generatePGSchema(joinT, ijschema);
-             if (doView) generatePGView(joinT, ijschema);
-             /* check for double join */
-             if ( pschema[parentTable].hasOwnProperty("parent_table") && generateJoin ) {
-                 var joinT2 = parentTable+"_inner_join_"+joinT;
-                 var ijjschema = mergeIntoJoin( ijschema, pschema[pschema[parentTable]["parent_table"]]);
-                 generatePGSchema(joinT2, ijjschema);
-                 if (doView) generatePGView(joinT2, ijjschema);
-             }
+             var ijschema = mergeIntoJoin( pschema[t], pschema[pschema[t]["parent_table"]] );
+             if ( pschema[pschema[t]["parent_table"]].hasOwnProperty("parent_table") && generateJoin ) {
+                 var ijjschema = mergeIntoJoin( ijschema, pschema[pschema[pschema[t]["parent_table"]]["parent_table"]]);
+                 generatePGSchema(joinT, ijjschema);
+             } else generatePGSchema(joinT, ijschema);
           }
        }
     });
