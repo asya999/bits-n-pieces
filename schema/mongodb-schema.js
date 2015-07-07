@@ -69,7 +69,8 @@ function schema(documents, options) {
                 if (!obj.hasOwnProperty(o)) continue;
                 /* do not flatten arrays! */
                 if ( (  ((typeof obj[o]) === 'object')
-                        && (!obj[o]["#array"])
+                        && (!obj["#array"])
+                        /* && (!obj[o]["#array"]) */
                         && ([$t, $d].indexOf(o) === -1) )
                         || (o=="coordinates")
                    )  {
@@ -632,7 +633,6 @@ function prepSchema (mschema, dbname, coll, tablename, result) {
               currentfield["#type"]="2darray";
               delete(currentfield["#array"]);
               result[tablename]["schema"][field]=currentfield;
-              result[tablename][field+"[1]"][field+"[2]"]=field+"_lat";
            } else {  /* must be object with two fields */
               var coords=fields.filter(function(z) { if (z.startsWith(field+".")) return z; });
               debug("coords: " + tojson(coords));
@@ -672,7 +672,7 @@ function prepSchema (mschema, dbname, coll, tablename, result) {
         if ( currentfield.hasOwnProperty("#array") && currentfield["#array"] ) {
            debug("prepSchema: currentfield has #array=true field is " + field);
            delete(currentfield["#array"]);
-           subtable=tablename+subsep+field;
+           subtable=tablename+subsep+field.toLowerCase();
            result[subtable]={};
            result[subtable]["parent_table"]=tablename;
            result[subtable]["pipe"]=[];

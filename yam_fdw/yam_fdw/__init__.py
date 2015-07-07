@@ -136,8 +136,9 @@ class Yamfdw(ForeignDataWrapper):
                        (u'=', True) : '$in',
                        (u'<>', False) : '$nin',
                        '~~': '$regex'
-        # TODO '!~~', '~~*', '!~~*', other binary ones that are composable
                       }
+
+        # TODO '!~~', '~~*', '!~~*', other binary ones that are composable
 
         for qual in quals:
             val_formatter = self.fields[qual.field_name]['formatter']
@@ -211,7 +212,7 @@ class Yamfdw(ForeignDataWrapper):
         # we are done
         if self.debug: t1 = time.time()
 
-      else:  # we have more than one field requested, with or without pipe
+      else:  # we have one or more fields requested, with or without pipe
 
         if '_id' not in fields:
             fields['_id'] = False
