@@ -2,7 +2,7 @@ var doView=true;
 var generateVirtual=true;
 var generateJoin=true;
 var debugOn=false;
-var replaceDots=true;
+var replaceDots=false;
 var depth=0;
 var mongodb_svr="mongo_server";
 var databaseOption="db";
@@ -791,7 +791,7 @@ function makeSchema(dbname, coll, options) {
     doView=true;
     generateVirtual=false;
     generateJoin=true;
-    replaceDots=true;
+    replaceDots=false;
     if (options.view!=undefined) doView=options.view;
     if (options.virtual!=undefined) generateVirtual=options.virtual;
     if (options.join!=undefined) generateJoin=options.join;

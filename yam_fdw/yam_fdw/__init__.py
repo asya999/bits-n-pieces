@@ -214,6 +214,10 @@ class Yamfdw(ForeignDataWrapper):
 
       else:  # we have one or more fields requested, with or without pipe
 
+        # TODO potential optimization
+        # if fields include field which has equality predicate in query, then we don't have to fetch it in 'fields'
+        # instead we can inject the exact equality expression into the result set
+
         if '_id' not in fields:
             fields['_id'] = False
 
