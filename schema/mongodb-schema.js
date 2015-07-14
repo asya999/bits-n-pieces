@@ -672,7 +672,7 @@ function prepSchema (mschema, dbname, coll, tablename, result) {
         if ( currentfield.hasOwnProperty("#array") && currentfield["#array"] ) {
            debug("prepSchema: currentfield has #array=true field is " + field);
            delete(currentfield["#array"]);
-           subtable=tablename+subsep+field.toLowerCase();
+           subtable=tablename+subsep+field.toLowerCase().replace(/\./g,'_');
            result[subtable]={};
            result[subtable]["parent_table"]=tablename;
            result[subtable]["pipe"]=[];
@@ -685,7 +685,6 @@ function prepSchema (mschema, dbname, coll, tablename, result) {
            if (currentfield["#type"]=="object" || currentfield["#type"].hasOwnProperty("object") ) {
               fschema[field]={}
               fschema[field]["_id"]=mschema["_id"];
-              fschema[field]["_id"]["#viewname"]=coll+"._id";
               for (var g in currentfield) 
                  if (currentfield.hasOwnProperty(g) && !g.startsWith("#")) 
                      fschema[field][field+"."+g]=currentfield[g]; 
