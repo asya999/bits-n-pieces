@@ -99,21 +99,8 @@ class Yamfdw(ForeignDataWrapper):
         if self.pipe:
             self.pipe = json.loads(self.pipe)
             if self.debug: log2pg('pipe is {}'.format(self.pipe))
-            self.objarray={}
-            self.arrayfields=[]
-            for i in range(len(self.pipe)):
-              try:
-                arr=self.pipe[i]['$unwind']
-              except:
-                continue
-              self.objarray[arr]=False
-              for f in self.fields:
-                 if f.startswith(arr+'.'):
-                    self.objarray[arr]=True
-                    self.arrayfields.append(f)
         else:
             self.pkeys = [ (('_id',), 1), ]
-            #fields = {k: True for k in columns}
             for f in self.fields: # if we want to calculate selectivity of each field (once per session)
                 if f=='_id': continue
                 # could check for unique indexes and set those to 1
@@ -189,6 +176,11 @@ class Yamfdw(ForeignDataWrapper):
 
       Q = self.build_spec(quals)
 
+      # optimization: if columns include field(s) with equality predicate in query, then we don't have to fetch it
+      eqfields = { q.field_name : q.value for q in quals if q.operator == '=' }
+      for f in eqfields: fields.pop(f)
+      # instead we will inject the exact equality expression into the result set
+
       if len(fields)==0:    # no fields need to be returned, just get counts
 
         if not self.pipe:
@@ -207,16 +199,13 @@ class Yamfdw(ForeignDataWrapper):
                break
 
         for x in xrange(docCount):
-            yield d
+            if eqfields: yield eqfields
+            else: yield d
 
         # we are done
         if self.debug: t1 = time.time()
 
       else:  # we have one or more fields requested, with or without pipe
-
-        # TODO potential optimization
-        # if fields include field which has equality predicate in query, then we don't have to fetch it in 'fields'
-        # instead we can inject the exact equality expression into the result set
 
         if '_id' not in fields:
             fields['_id'] = False
@@ -243,26 +232,23 @@ class Yamfdw(ForeignDataWrapper):
         if self.pipe or transfields:
             if self.pipe: pipe.extend(self.pipe)
             if Q: pipe.insert(0, { "$match" : Q } )
-            if transfields: 
-                pipe.append( { "$project" : projectFields } )
-                if Q:
-                   # only needed if quals fields are array members, can check that TODO
-                   postQ= self.build_spec(quals, False)
-                   if Q != postQ: pipe.append( { "$match" : postQ } )
-                
+            pipe.append( { "$project" : projectFields } )
+            if transfields and Q:
+                 # only needed if quals fields are array members, can check that TODO
+                 postQ= self.build_spec(quals, False)
+                 if Q != postQ: pipe.append( { "$match" : postQ } )
+
             if self.debug: log2pg('Calling aggregate with {} stage pipe {} '.format(len(pipe),pipe))
             cur = self.coll.aggregate(pipe, cursor={})
         else:
             if self.debug: log2pg('Calling find')
             cur = self.coll.find(Q, fields)
 
-            if len(fields)==1 and "_id" in fields:
-              cur=cur.hint([("_id",ASCENDING)])
-
         if self.debug: t1 = time.time()
         if self.debug: docCount=0
         if self.debug: log2pg('cur is returned {} with total {} so far'.format(cur,t1-t0))
         for doc in cur:
+            doc.update(eqfields)
             yield {col: dict_traverser(self.fields[col]['path'], doc) for col in columns}
             if self.debug: docCount=docCount+1
 
