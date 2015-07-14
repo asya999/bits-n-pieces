@@ -21,6 +21,38 @@ makeBuckets = function (field, array) {
      return con[0];
 }
 
+getTypes = function (field) {
+     var types={Timestamp: Timestamp(0,0), 
+                ISODate: new Date(0,0,0), 
+                True: true, 
+                False: false,  
+                ObjectId: ObjectId("000000000000000000000000"),  
+                Subdocument: {}, 
+                String:"", 
+                Number:NumberLong("-9223372036854775807"),
+                Null: null
+     };
+     var i=0;
+     var array=[];
+     for (t in types) {
+        array[i]=t;
+        i++;
+     }
+     var maxPos=array.length;
+     array[maxPos]="Other";
+
+     var con=[];
+     con[maxPos]="Other";
+     for (pos = maxPos-1; pos > -1; pos--) {
+        con[pos] = {"$cond":{
+              if: {$gte:[field, types[array[pos]]]},
+              then:  array[pos],
+              else:  con[pos+1]
+        }};
+     }
+     return {$cond:{if: {$isArray:field}, then: "Array", else: con[0]}};
+}
+
 toGBs=function(field) {
   return {$divide:[field,1024*1024*1024]}
 }
