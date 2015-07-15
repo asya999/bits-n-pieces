@@ -21,36 +21,43 @@ makeBuckets = function (field, array) {
      return con[0];
 }
 
+isNumber = function (field) {
+     var minv = NumberLong("-9223372036854775807");
+     var maxv = NumberLong("9223372036854775807");
+     return { "$cond" : { "if" : { $and: [ {$gte: [ field, minv ] }, {$lte: [ field, maxv]   }   ]  },
+                          then: true,
+                          else: false
+            } };
+}
+
 getTypes = function (field) {
-     var types={Timestamp: Timestamp(0,0), 
-                ISODate: new Date(0,0,0), 
-                True: true, 
-                False: false,  
-                ObjectId: ObjectId("000000000000000000000000"),  
-                Subdocument: {}, 
-                String:"", 
-                Number:NumberLong("-9223372036854775807"),
-                Null: null
-     };
-     var i=0;
-     var array=[];
-     for (t in types) {
-        array[i]=t;
-        i++;
-     }
-     var maxPos=array.length;
-     array[maxPos]="Other";
+     var alltypes=[
+                { t: "Regex", minv: Timestamp(2147483647,9999) },
+                { t: "Timestamp", minv: Timestamp(0,0) },
+                { t: "ISODate", minv: new Date(0,0,0) },
+                { t: "True", minv: true },
+                { t: "False", minv: false },
+                { t: "ObjectId", minv: ObjectId("000000000000000000000000") },
+                { t: "BinData", minv: BinData(0,"") },
+                { t: "Array", minv: [] },
+                { t: "Subdocument", minv: {} },
+                { t: "String", minv: "" },
+                { t: "Number", minv: NumberLong("-9223372036854775807") },
+                { t: "Null", minv: null }
+     ] ;
+
+     var maxPos=alltypes.length;
 
      var con=[];
-     con[maxPos]="Other";
+     con[maxPos]="Other/Unknown";
      for (pos = maxPos-1; pos > -1; pos--) {
         con[pos] = {"$cond":{
-              if: {$gte:[field, types[array[pos]]]},
-              then:  array[pos],
+              if: {$gte:[field, alltypes[pos]["minv"] ]},
+              then:  alltypes[pos]["t"],
               else:  con[pos+1]
         }};
      }
-     return {$cond:{if: {$isArray:field}, then: "Array", else: con[0]}};
+     return con[0];
 }
 
 toGBs=function(field) {
