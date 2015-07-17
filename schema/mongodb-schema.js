@@ -750,7 +750,8 @@ function generatePGSchema (tablename, pgschema) {
 
     print("   SERVER " + mongodb_svr + " OPTIONS(" + databaseOption + " '" + pgschema.dbname + "', collection '" + pgschema.coll + "'");
 
-    if (pgschema.pipe.length> 0) print(", pipe '", tojsononeline(pgschema.pipe), "' );");
+    if (username != '') print("        , username '" + username + "', password '" + password + "'");
+    if (pgschema.pipe.length> 0) print("        , pipe '", tojsononeline(pgschema.pipe), "' );");
     else print(");" );
 
     if (doView) generatePGView(tablename, pschema);
@@ -801,8 +802,10 @@ function makeSchema(dbname, coll, options) {
     includeFields=options.includeFields || [];
     excludeFields=options.excludeFields || [];
     schemaFilter=options.filter || null;
-    mongodb_svr= options.serverName || "mongo_server";
+    mongodb_svr= options.serverName || "mongodb_proxy_server";
     databaseOption= options.databaseOption || "db";
+    username = options.username || '';
+    password = options.password || '';
 
     debug("doView is " + doView + " options.view is " + options.view);
 
