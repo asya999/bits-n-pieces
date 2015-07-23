@@ -14,6 +14,7 @@ var subsep="__";
 var maxdepth=5;
 var geo2d=[];
 var geo2dsphere=[];
+var hosted=true;
 
 
 /**
@@ -744,6 +745,12 @@ function prepSchema (mschema, dbname, coll, tablename, result) {
 }
 
 function generatePGSchema (tablename, pgschema) {
+    if (hosted) {
+        print(schema_stringify(pgschema.schema));
+        print(mongodb_svr, databaseOption, pgschema.dbname, pgschema.coll, username, password);
+        if (pgschema.pipe.length> 0) print(tojsononeline(pgschema.pipe));
+        return;
+    }
     print('DROP FOREIGN TABLE IF EXISTS "' + tablename + '_fdw" CASCADE;');
 
     print('CREATE FOREIGN TABLE "' + tablename + '_fdw" ( ', schema_stringify(pgschema.schema), " ) ");
@@ -792,6 +799,8 @@ function makeSchema(dbname, coll, options) {
     generateVirtual=false;
     generateJoin=true;
     replaceDots=false;
+    hosted=true;
+    if (options.hosted!=undefined) hosted=options.hosted;
     if (options.view!=undefined) doView=options.view;
     if (options.virtual!=undefined) generateVirtual=options.virtual;
     if (options.join!=undefined) generateJoin=options.join;
@@ -820,14 +829,14 @@ function makeSchema(dbname, coll, options) {
 
     colls=[];
     /* this function can be called for DB to make schema for every collection */
-    if (coll == undefined) colls=db.getSiblingDB(dbname).getCollectionNames(); else 
-    colls.push(coll);
+    if (coll == undefined) colls=db.getSiblingDB(dbname).getCollectionNames(); 
+    else colls.push(coll);
     /* set error level onces */
     print('SET client_min_messages = error;');
 
-    colls.forEach(function(c) {
+    colls.forEach(function(c1) {
 
-       var cursor = db.getSiblingDB(dbname).getCollection(c).find({}, null, sample /* limit */, 0 /* skip*/, 0 /* batchSize */);
+       var cursor = db.getSiblingDB(dbname).getCollection(c1).find({}, null, sample /* limit */, 0 /* skip*/, 0 /* batchSize */);
 
        opts={};
        opts={flat:true};
@@ -837,14 +846,14 @@ function makeSchema(dbname, coll, options) {
        geo2dsphere=[];
 
        /* figure out if there are any geo fields */
-       db.getSiblingDB(dbname).getCollection(c).getIndexes().forEach(function(i) { 
+       db.getSiblingDB(dbname).getCollection(c1).getIndexes().forEach(function(i) { 
            if (i.name.endsWith("2d")) geo2d.push(firstKeyName(i.key)); 
            if (i.name.endsWith("2dsphere")) geo2dsphere.push(firstKeyName(i.key)); 
        });
    
        debug("makeSchema: Colling pschema with " + tojson(sch));
        /* transform contents of sch into result */
-       pschema = prepSchema(sch, dbname, c);
+       pschema = prepSchema(sch, dbname, c1);
 
        /* TODO add option to output JSON schema here, OR go on to generate relational schema */
 
