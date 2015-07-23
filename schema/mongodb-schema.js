@@ -682,9 +682,9 @@ function prepSchema (mschema, dbname, coll, tablename, result) {
            debug("Deep " + depth);
            debug(tojson(result[tablename]["pipe"]));
            debug(tojson(result[subtable]["pipe"]));
-           fschema={}
+           fschema={};
            if (currentfield["#type"]=="object" || currentfield["#type"].hasOwnProperty("object") ) {
-              fschema[field]={}
+              fschema[field]={};
               fschema[field]["_id"]=mschema["_id"];
               for (var g in currentfield) 
                  if (currentfield.hasOwnProperty(g) && !g.startsWith("#")) 
@@ -721,14 +721,14 @@ function prepSchema (mschema, dbname, coll, tablename, result) {
         /*  if the field name isn't legal postgres column then we need to add legal name */
         /*  also normalize dots and upper case to allow living without having to double quote */
         if ( replaceDots )
-            newf=f.replace(/ /g,'').replace(/\./g,'_').toLowerCase().slice(0,62)
+            newf=f.replace(/ /g,'').replace(/\./g,'_').toLowerCase().slice(0,62);
         else
-            newf=f.replace(/ /g,'').toLowerCase().slice(0,62)
+            newf=f.replace(/ /g,'').toLowerCase().slice(0,62);
         if (newf!=f) {
            sch[f]["#pgname"]=newf;
         }
         if (typeof sch[f]["#type"] == "object") {
-          types=[]
+          types=[];
           typeobj=sch[f]["#type"];
           for (var g in typeobj) if (typeobj.hasOwnProperty(g)) types.push(g);
           type1=reduceType(types);
@@ -891,7 +891,7 @@ if (typeof DBCollection !== 'undefined') {
     DBCollection.prototype.makeSchema = function(options) {
         
        return makeSchema(this._db.getName(), this._shortName, options);
-    }
+    };
 
     DBCollection.prototype.schema = function(options) {
         
