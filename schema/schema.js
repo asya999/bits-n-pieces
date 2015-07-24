@@ -14,7 +14,7 @@ var sample = 100;
  *                   an array flag (#array) 
  */
 function schema(documents, options, dbname, collname) {
-    var SCHEMA_VERSION = "0.6.0";
+    var SCHEMA_VERSION = "0.7.1";
 
     /**
      * right-aligned string split
