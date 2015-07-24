@@ -8,7 +8,6 @@ var sample = 100;
  * @param {Object} options currently supports these options: 
  *                 flat: true/false    flatten the schema to dot-notation top-level names
  *                 data: true/false    run data sampling and return information about data
- *                 filter: {...}       only return fields/subfields that match the filter
  *
  * @returns {Object} the schema document with counts (#count), types (#type),
  *                   an array flag (#array) 
@@ -341,67 +340,11 @@ function schema(documents, options, dbname, collname) {
         return defaults;
     }
 
-    /**
-     * filter leaf nodes of the schema based on a schema filter document, 
-     * only return the matching ones.
-     *
-     * @param {Object} schema 
-     * @param {Number} filter_obj 
-     * 
-     * @returns {Object} filtered schema
-     */
-    function _filter(schema, filter_obj) {
-
-        if (typeof schema !== 'object') {
-            return false;
-        }
-
-        // only filter leaves, skip internal nodes
-        var isLeaf = Object.keys(schema).every(function (key) {
-            // ignore special keys
-            if (metavar_names.indexOf(key) !== -1) {
-                return true;
-            }
-            return (typeof schema[key] !== 'object');
-        });
-
-        if (isLeaf) {
-            for (fk in filter_obj) {
-                if (!(fk in schema) || (schema[fk] != filter_obj[fk])) {
-                    return false;
-                }
-            }
-            return true;
-        }
-
-        // recursive call for each property
-        var matchChildren = Object.keys(schema)
-            
-            .filter(function(key) {
-                return (metavar_names.indexOf(key) === -1);
-            })
-
-            .map(function (key) {
-                var res = _filter(schema[key], filter_obj);
-                if (!res) {
-                    delete schema[key];
-                }
-                return res;
-            });
-
-        if (!matchChildren.some( function (d) {return d;} )) {
-            return false;
-        } else {
-            return true;
-        }
-    }
-
     // define defaults
     var options = options || {};
     options.raw = options.raw || false;
     options.flat = options.flat === false ? false : true;
     options.data = options.data || false;
-    options.filter = options.filter || null;
     options.merge = options.merge || false;
     options.metavars = _mergeDefaults({
         prefix: '#',
@@ -460,11 +403,6 @@ function schema(documents, options, dbname, collname) {
     // return deep or flat version
     if (options.flat) {
         schema = _flatten(schema);
-    }
-
-    // filter schema
-    if (options.filter !== null) {
-        _filter(schema, options.filter);
     }
 
     // if merge option set, replace with `true` to avoid circular reference
