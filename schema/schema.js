@@ -112,28 +112,28 @@ function schema(documents, options, dbname, collname) {
         if (typeof ObjectId !== 'undefined' && obj instanceof ObjectId) {
             type = 'objectid';
             schema[$t][type] = (type in schema[$t]) ? schema[$t][type] + 1 : 1;
-            return schema;        
+            return schema;
         }
 
         if (obj instanceof NumberLong || obj instanceof NumberInt) {
             type = 'number';
             schema[$t][type] = (type in schema[$t]) ? schema[$t][type] + 1 : 1;
-            return schema;        
+            return schema;
         }
 
         // special case: Date (ISODate is also a Date)
         if (obj instanceof Date) {
             type = 'date';
             schema[$t][type] = (type in schema[$t]) ? schema[$t][type] + 1 : 1;
-            return schema;        
+            return schema;
         }
 
         // special case: nulls get their own type
         if (obj === null) {
             type = 'null';
             schema[$t][type] = (type in schema[$t]) ? schema[$t][type] + 1 : 1;
-            return schema;        
-        }        
+            return schema;
+        }
 
         var type = typeof obj;
         schema[$t][type] = (type in schema[$t]) ? schema[$t][type] + 1 : 1;
@@ -162,7 +162,7 @@ function schema(documents, options, dbname, collname) {
                     return;
                 } else {
                     // objects need to be handled recursively
-                    _infer(schema[key], val)
+                    _infer(schema[key], val);
                 }
 
                 // handle data inference
@@ -176,8 +176,8 @@ function schema(documents, options, dbname, collname) {
                         case 'number':
                             if (!('min' in d)) d['min'] = Infinity;
                             if (!('max' in d)) d['max'] = -Infinity;
-                            d['min'] = (val < d['min']) ? val : d['min']; 
-                            d['max'] = (val > d['max']) ? val : d['max']; 
+                            d['min'] = (val < d['min']) ? val : d['min'];
+                            d['max'] = (val > d['max']) ? val : d['max'];
                             break;
                         // strings, collect histogram
                         case 'string':
@@ -195,9 +195,9 @@ function schema(documents, options, dbname, collname) {
                             // dates, calculate min and max date
                             if (val instanceof Date) {
                                 if (!('min' in d)) d['min'] = new Date(100000000*86400000);
-                                if (!('max' in d)) d['max'] = new Date(-100000000*86400000); 
-                                d['min'] = (val.getTime() < d['min'].getTime()) ? val : d['min']; 
-                                d['max'] = (val.getTime() > d['max'].getTime()) ? val : d['max']; 
+                                if (!('max' in d)) d['max'] = new Date(-100000000*86400000);
+                                d['min'] = (val.getTime() < d['min'].getTime()) ? val : d['min'];
+                                d['max'] = (val.getTime() > d['max'].getTime()) ? val : d['max'];
                             }
                             break;
                     }
@@ -297,7 +297,7 @@ function schema(documents, options, dbname, collname) {
                 if ('text' in schema[$t]) delete schema[$t].text;
                 if ('category' in schema[$t]) delete schema[$t].category;
                 schema[$t].string = string_sum;
-            }            
+            }
         }
 
         // remove $prop 
@@ -348,10 +348,10 @@ function schema(documents, options, dbname, collname) {
     options.merge = options.merge || false;
     options.metavars = _mergeDefaults({
         prefix: '#',
-        count: 'count', 
-        type: 'type', 
-        data: 'data', 
-        array: 'array', 
+        count: 'count',
+        type: 'type',
+        data: 'data',
+        array: 'array',
         other: 'other'
     }, options.metavars);
 
@@ -422,7 +422,7 @@ function schema(documents, options, dbname, collname) {
         return {
             raw_schema: schema,
             cleanup: function() {
-                 return _cleanup(schema);     
+                 return _cleanup(schema);
             }
         }
     }
@@ -434,10 +434,15 @@ function schema(documents, options, dbname, collname) {
         }
       }
     }
-    db.getSiblingDB(dbname).getCollection(collname).getIndexes().forEach(function(i) { 
-        if (i.name.endsWith("2d")) schema[firstKeyName(i.key)]["#index2d"]=true; 
+    db.getSiblingDB(dbname).getCollection(collname).getIndexes().forEach(function(i) {
+        if (i.name.endsWith("2d")) schema[firstKeyName(i.key)]["#index2d"]=true;
         if (i.name.endsWith("2dsphere")) schema[firstKeyName(i.key)]["#index2dsphere"]=true;
     });
+    var cstats=db.getSiblingDB(dbname).getCollection(collname).stats();
+    schema["__schema"]["#totalcount"]=cstats["count"];
+    schema["__schema"]["#avgObjSize"]=cstats["size"];
+    schema["__schema"]["#size"]=cstats["avgObjSize"];
+    schema["__schema"]["#storageSize"]=cstats["storageSize"];
     return schema;
 }
 
