@@ -12,8 +12,6 @@ var schemaFilter={};
 var sample = 100;
 var subsep="__";
 var maxdepth=5;
-var geo2d=[];
-var geo2dsphere=[];
 var hosted=true;
 
 
@@ -30,7 +28,7 @@ var hosted=true;
  * @returns {Object} the schema document with counts (#count), types (#type),
  *                   an array flag (#array) 
  */
-function schema(documents, options) {
+function schema(documents, options, dbname, collname) {
     var SCHEMA_VERSION = "0.6.0";
 
     /**
@@ -506,6 +504,10 @@ function schema(documents, options) {
         }
     }
 
+    db.getSiblingDB(dbname).getCollection(collname).getIndexes().forEach(function(i) { 
+        if (i.name.endsWith("2d")) schema[firstKeyName(i.key)]["#index2d"]=true; 
+        if (i.name.endsWith("2dsphere")) schema[firstKeyName(i.key)]["#index2dsphere"]=true;
+    });
     return schema;
 }
 
@@ -625,7 +627,7 @@ function prepSchema (mschema, dbname, coll, tablename, result) {
 
         delete(currentfield["#count"]);
 
-        if ( geo2d.indexOf(field) >= 0 ) {
+        if ( currentfield["#index2d"] ) {
            /* need to handle two element array differently from two field subdocument */
            debug(field + " is a 2d index geo field!!!");
            currentfield["#type"]="2d";
@@ -648,7 +650,7 @@ function prepSchema (mschema, dbname, coll, tablename, result) {
            continue;
         }
         /* here we could support separate table or same one for 2dsphere, depending on whether there are non-points */
-        if ( geo2dsphere.indexOf(field) >= 0 ) {
+        if ( currentfield["#index2dsphere"] ) {
            debug(field + " is a 2dsphere index geo field!!!");
            currentfield["#type"]="2dsphere";
            currentfield["#skip"]=true;
@@ -840,16 +842,13 @@ function makeSchema(dbname, coll, options) {
 
        opts={};
        opts={flat:true};
-       var sch=schema(cursor, opts);
+       var sch=schema(cursor, opts, dbname, c1);
 
-       geo2d=[];
-       geo2dsphere=[];
-
-       /* figure out if there are any geo fields */
+       /* figure out if there are any geo fields 
        db.getSiblingDB(dbname).getCollection(c1).getIndexes().forEach(function(i) { 
-           if (i.name.endsWith("2d")) geo2d.push(firstKeyName(i.key)); 
-           if (i.name.endsWith("2dsphere")) geo2dsphere.push(firstKeyName(i.key)); 
-       });
+           if (i.name.endsWith("2d")) geo2d.push...
+           if (i.name.endsWith("2dsphere")) geo2dsphere.push(firstKeyName(i.key));
+       });*/
    
        debug("makeSchema: Colling pschema with " + tojson(sch));
        /* transform contents of sch into result */
@@ -907,6 +906,6 @@ if (typeof DBCollection !== 'undefined') {
         // get documents
         var cursor = this.find({}, null, options.samples /* limit */, 0 /* skip*/, 0 /* batchSize */);
 
-        return schema(cursor, options);
+        return schema(cursor, options, this._db.getName(), this._shortName);
     }
 }
