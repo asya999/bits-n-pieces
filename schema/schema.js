@@ -443,6 +443,8 @@ function schema(documents, options, dbname, collname) {
     schema["__schema"]["#avgObjSize"]=cstats["size"];
     schema["__schema"]["#size"]=cstats["avgObjSize"];
     schema["__schema"]["#storageSize"]=cstats["storageSize"];
+    schema["__schema"]["#dbname"]=dbname;
+    schema["__schema"]["#collname"]=collname;
     return schema;
 }
 
