@@ -12,6 +12,55 @@ shortDate = function (dt) {
     return dt.getUTCFullYear() + "/" + (dt.getUTCMonth()+1) + "/" + dt.getUTCDate()+" "+dt.getUTCHours() + ":" + cmin + ":" + csec;
 }
 
+moveRateAnalysis = function( chlog, ns, v ) {
+
+    var mmoves = {$match:{ns:ns,what:{$in:["moveChunk.commit","moveChunk.start"]}}}; 
+    var chgroup = {$group:{_id:{mn:"$details.min",mx:"$details.max",from_to:{$concat:["$details.from","-","$details.to"]},client:"$clientAddr",week:{$week:"$time"}},docs:{$max:"$details.cloned"},bytes:{$max:"$details.clonedBytes"},timeST:{$min:"$time"},timeEND:{$max:"$time"},count:{$sum:1}}};
+    var mpairs = {$match:{"count":2,docs:{$gt:0}, bytes:{$gt:1024*1024}}};
+    var proj1 = {$project:{docs:1,bytes:1,MBs:{$divide:["$bytes",1024*1024]},timeInSec:{$divide:[{$subtract:["$timeEND","$timeST"]},1000]},timeInMin:{$divide:[{$subtract:["$timeEND","$timeST"]}, 1000*60]},"timeEND":1}}; 
+    var proj2 = {$project:{from_to:"$_id.from_to",chunkSize:round("$MBs",2),numDocs:"$docs",rateMBsPerMin:round({$divide:["$MBs","$timeInMin"]},2),rateMBsPerSec:round({$divide:["$MBs","$timeInSec"]},2),when:"$timeEND",timeInSec:1,_id:0}};
+    sortBy = {$sort:{rateMBsPerSec:-1}};
+    groupAll = {$group:{_id:null, avgRateMBsPerSec:{$avg:"$rateMBsPerSec"},stdDevPop:{$stdDevPop:"$rateMBsPerSec"},stdDevSamp:{$stdDevSamp:"$rateMBsPerSec"},fastest:{$first:"$$ROOT"},slowest:{$last:"$$ROOT"}}};
+
+    if (v>3) {
+       sortBy = {$sort:{from_to:1, rateMBsPerSec:-1}};
+       groupBy = {$group:{_id:"$from_to", avgRateMBsPerSec:{$avg:"$rateMBsPerSec"},stdDevPop:{$stdDevPop:"$rateMBsPerSec"},stdDevSamp:{$stdDevSamp:"$rateMBsPerSec"},fastest:{$first:"$$ROOT"},slowest:{$last:"$$ROOT"},MBs:{$sum:"$chunkSize"},sec:{$sum:"$timeInSec"},total:{$sum:1}}};
+       var r = chlog.aggregate(mmoves, chgroup, mpairs, proj1, proj2, sortBy, groupBy, {$sort:{_id:1}} );
+       var result = unagg(r)
+       if (result.length==0) return;
+       print("Detailed Migration Rate Analysis By Shard Pairs:");
+    } else if (v>2 ) {
+       sortBy = {$sort:{from_to:1, rateMBsPerSec:-1}};
+       groupBy = {$group:{_id:"$from_to", avgRateMBsPerSec:{$avg:"$rateMBsPerSec"},MBs:{$sum:"$chunkSize"},sec:{$sum:"$timeInSec"}}};
+       var r = chlog.aggregate(mmoves, chgroup, mpairs, proj1, proj2, sortBy, groupBy, {$sort:{_id:1}} );
+       var result = unagg(r)
+       if (result.length==0) return;
+       print("Migration Rate Summary By Shard Pairs:");
+    } else if (v>1 ) {
+       var r = chlog.aggregate(mmoves, chgroup, mpairs, proj1, proj2, sortBy, groupAll );
+       var result = unagg(r)
+       if (result.length==0) return;
+       print("Migration Rate Analysis:");
+       printjson(result[0]);
+    } else {
+       groupAll = {$group:{_id:null, avgRateMBsPerSec:{$avg:"$rateMBsPerSec"}}};
+       var r = chlog.aggregate(mmoves, chgroup, mpairs, proj1, proj2, sortBy, groupAll );
+       var result = unagg(r)
+       if (result.length==0) return;
+       print("Overall Migration Rate:  " + Math.round(result[0].avgRateMBsPerSec,2) + " MBs per Sec");
+    }
+    if (v>2) {
+       result.forEach(function(rr) {
+          print("\tShard pair " + rr._id + ", avg of Rates(MBsPerSec): " + Math.round(rr.avgRateMBsPerSec*100)/100 + "       (overall rate: " + Math.round((100*rr.MBs/rr.sec))/100+ ") ");
+          if (v>3) {
+              delete(rr._id);
+              delete(rr.avgRateMBsPerSec);
+              print("\n" + tojson(rr));
+          }
+      });
+    }
+}
+
 fmtAborted = function( changeDoc, printTime ) {
     ret = "";
     details = changeDoc.details;
@@ -442,6 +491,7 @@ wts = function (dbname, options) {
             if (m==moves.length-1) print("\t    latest   at: " + moves[m].time.toISOString()); 
          }
          printDetailsInfo(chlog, c._id, true);
+         moveRateAnalysis(chlog, c._id, verbose );
          // Unsuccessful migrations
          for ( u = 0; u < aborts.length; u++ ) { 
             if (u==0) print("\n\tAborted migrations:");
