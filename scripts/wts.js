@@ -47,7 +47,7 @@ moveRateAnalysis = function( chlog, ns, v ) {
        var r = chlog.aggregate(mmoves, chgroup, mpairs, proj1, proj2, sortBy, groupAll );
        var result = unagg(r)
        if (result.length==0) return;
-       print("Overall Migration Rate:  " + Math.round(result[0].avgRateMBsPerSec,2) + " MBs per Sec");
+       print("Overall Migration Rate:  " + Math.round(result[0].avgRateMBsPerSec*100)/100 + " MBs per Sec");
     }
     if (v>2) {
        result.forEach(function(rr) {
