@@ -113,19 +113,16 @@ getLastOplog = function (limit, ns, op) {
    return db.getSiblingDB("local").oplog.rs.find(arg).sort({$natural:-1}).limit(lim);
 }
 
-StopWatch = function()
-{
+StopWatch = function() {
     this.startMilliseconds = 0;
     this.elapsedMilliseconds = 0;
 }
 
-StopWatch.prototype.start = function()
-{
+StopWatch.prototype.start = function() {
     this.startMilliseconds = new Date().getTime();
 }
 
-StopWatch.prototype.stop = function()
-{
+StopWatch.prototype.stop = function() {
     this.elapsedMilliseconds = new Date().getTime() - this.startMilliseconds;
 }
 

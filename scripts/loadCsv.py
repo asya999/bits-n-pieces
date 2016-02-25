@@ -1,7 +1,6 @@
 import csv
 import pymongo
 import sys
-import json
 import datetime
 import arrow
 

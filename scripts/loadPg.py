@@ -1,8 +1,6 @@
 import psycopg2
 import psycopg2.extras
 import pymongo
-import datetime
-import arrow
 
 query = """SELECT * from "DateBins" LIMIT 50"""
 
