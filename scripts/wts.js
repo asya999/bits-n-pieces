@@ -190,6 +190,43 @@ printDetailsInfo = function( chlog, ns, successful ) {
     })
 }
 
+getShardServerDetails = function(conn, hostName) {
+  rsStatusFinal = [];
+  primary = {};
+  oldestSecondary = null;
+  rsStatus = conn.adminCommand({replSetGetStatus:1});
+  rsConf = conn.adminCommand({replSetGetConfig: 1});
+  serverStats = conn.adminCommand({serverStatus:1});
+  numMembers = rsStatus.members.length;
+
+  rsConf.config.members.forEach(function(m) {
+    if (m.votes >= 1) {
+      rsStatus.members.forEach(function(rsm){
+        if (rsm._id == m._id) {
+          rsStatusFinal.push(rsm);
+        }
+      });
+    }
+  });
+  rsStatusFinal.forEach(function(rsm){
+    if (rsm.state == 1) {
+      primary = rsm;
+    }
+    if (rsm.state == 2) {
+      if (oldestSecondary == null) {
+        oldestSecondary = rsm;
+      }
+      if (rsm.optime < oldestSecondary.optime) {
+       oldestSecondary = rsm;
+     }
+    }
+  });
+  print(hostName);
+  print("Delay for majority is " + (primary.optimeDate - oldestSecondary.optimeDate));
+  print("Primaries storage engine is " +serverStats.storageEngine.name);
+  print("\n");
+}
+
 /* analyze changelog collection in config DB for recent activity */
 wts = function (dbname, options) {
    debug = false;
@@ -259,6 +296,7 @@ wts = function (dbname, options) {
          if ( s.host.indexOf("/") > 0 ) reps += 1;
          if ( s.hasOwnProperty("tags") && s.tags.length > 0 ) tagged += 1;
          if ( s.hasOwnProperty("draining") && s.draining ) print("\tShard " + s._id + " is draining");
+         getShardServerDetails(new Mongo(s.host), s.host);
    });
    print("\t" + reps + " out of " + shs + " shards are replica sets");
    if ( tagged > 0 ) print("\t" + (tagged==shs ? "all" : tagged + " of " + shs) + " shards have tags set");
@@ -566,3 +604,4 @@ wts = function (dbname, options) {
       if (grandTotal > 0) print("\t\t" + grandTotal + " sequences of chunks greater than " + seqThreshold);
    } );
 }
+
