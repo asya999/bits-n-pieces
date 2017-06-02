@@ -25,8 +25,7 @@ sortArray = function( inputArray, sortField="", asc=false) {
     }
   }
   var initialArray=[ maxF, minF ];
-  var sliceReduce = {$slice:[
-    {$reduce:{
+  var reduce = {$reduce:{
       input:inputArray, 
       initialValue: initialArray,
       in: {$let:{ 
@@ -54,8 +53,16 @@ sortArray = function( inputArray, sortField="", asc=false) {
           ]} 
         }}
       }}
-  }},
-  1, {$size:inputArray} ]};
+  }};
+  var sz={$size:inputArray};
+  var sliceReduce={$cond:[
+      {$eq:[ 0, sz ]},
+      [],
+      {$slice:[
+        reduce,
+        1, sz 
+      ]}
+  ]};
   if (asc) return {$reverseArray:sliceReduce};
   else return sliceReduce;
 }
