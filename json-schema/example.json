@@ -28,7 +28,6 @@
 	"products":{
 	    "type": "array",
     	    "items": {
-        	"title": "Product",
         	"type": "object",
         	"properties": {
             	   "id": {
