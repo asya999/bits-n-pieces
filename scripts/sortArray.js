@@ -5,19 +5,26 @@ sortArray = function( inputArray, sortField="", asc=false) {
    */
   var suffix = "";
   var maxF=MaxKey;
+  var minF=MinKey;
   if (sortField!="") {
     suffix = "."+sortField;
-    maxF={};
-    if (sortField.indexOf('.')>-1) {
+    maxF={}; minF={}
+    if (sortField.indexOf('.')==-1) {
+       maxF[sortField]=MaxKey;
+       minF[sortField]=MinKey;
+    } else { 
        var mx=maxF;
+       var mn=minF;
        var tokens = sortField.split('.');
        tokens.slice(0,tokens.length-1).forEach(function(m) {
            mx[m]={}; mx=mx[m];
+           mn[m]={}; mn=mn[m];
        });
        mx[tokens[tokens.length-1]]=MaxKey;
+       mn[tokens[tokens.length-1]]=MinKey;
     }
   }
-  var initialArray=[ maxF ];
+  var initialArray=[ maxF, minF ];
   var sliceReduce = {$slice:[
     {$reduce:{
       input:inputArray, 
