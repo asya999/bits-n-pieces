@@ -7,7 +7,7 @@ getktvs=function(input) {
       var m={"$map":{}}; 
       m["$map"]["input"]=input; 
       m["$map"]["as"]="f"; 
-      m["$map"]["in"]={key:"$$f.k",type:{$type:"$$f.v"}, value:"$$f.v"}; 
+      m["$map"]["in"]={k:"$$f.k",t:{$type:"$$f.v"}, v:"$$f.v"}; 
       return m;
 };
 /* given type, value, figure out type and return appropriate thing *
@@ -60,10 +60,10 @@ concatPre=function(prefix, key) {
 mapValue = function(o,i,prefix) {
  if (i>3) return o; 
  i=i+1; 
- return {"$map":{"input":o, "as":"o", "in": {"key":"$$o.key", "type":"$$o.type", "value":{"$switch": 
+ return {"$map":{"input":o, "as":"o", "in": {"k":"$$o.k", "t":"$$o.t", "v":{"$switch": 
   { "branches":[ 
-    {"case":{$eq:["$$o.type","object"]} , "then": { properties: mapObject("$$o.value",i, {$concat:[prefix,"$$o.key",'.']}) } },
-    {"case":{$eq:["$$o.type","array"]} , "then": { items: mapArray("$$o.value", i)} },
+    {"case":{$eq:["$$o.t","object"]} , "then": { properties: mapObject("$$o.v",i, {$concat:[prefix,"$$o.k",'.']}) } },
+    {"case":{$eq:["$$o.t","array"]} , "then": { items: mapArray("$$o.v", i)} },
     ], 
     "default":"$$REMOVE"
   }
@@ -75,6 +75,7 @@ mapObject = function (o, i, prefix) {
     i=i+1; 
     return mapValue(getktvs({$objectToArray:o}),i, prefix);
 };
+
 mapArray = function(a, i) {
      return {$map:{
 	input: a, 
@@ -116,11 +117,11 @@ arraygroup = function(input) {
 	input:input,
 	initialValue: [],
 	in: {$cond:[
-		{$in:["$$this.key","$$value.key"]},    
+		{$in:["$$this.k","$$value.k"]},    
                 /* this key is in list */
-		{$concatArrays:[ {$filter:{input:"$$value.key"}} ] },
+		{$concatArrays:[ {$filter:{input:"$$value.k"}} ] },
                 /* this key is not in the list */
-		{$concatArrays:["$$value", [ {key:"$$this.key", type: ["$$this.type"] } ]] }
+		{$concatArrays:["$$value", [ {k:"$$this.k", t: ["$$this.t"] } ]] }
 	]}
    }}
 };
@@ -130,36 +131,36 @@ unwindKeep=function(p) {
     return {$unwind:{path:p,preserveNullAndEmptyArrays:true}};
 };
 groupPK=function(p,o) {
- return {$group:{_id:{i:"$_id","pk":p+".key"},i:{$first:o},count:{$sum:"$count"},pt:{$addToSet:p+".type"}}}; 
+ return {$group:{_id:{i:"$_id","pk":p+".k"},i:{$first:o},count:{$sum:"$count"},pt:{$addToSet:p+".t"}}}; 
 };
 typea=function(t) { return {$cond: [{$eq:[{$size:t},1]},{$arrayElemAt:[t,0]},t]};};
 toObj=function(p) {
-  return {$arrayToObject:{$map:{input:p, in:{k:"$$this.key", v:{type:"$$this.type"}}}}};
+  return {$arrayToObject:{$map:{input:p, in:{k:"$$this.k", v:{type:"$$this.t"}}}}};
 };
 /* light weight, without analyzing values */
 prefix="";
 db.cat.aggregate([
 {$project:{p:mapValue(getktvs({$objectToArray:"$$ROOT"}),0,"")}},
 unwindKeep("$p"),
-{$group:{_id:{key:"$p.key",type:"$p.type"},count:{$sum:1},p:{$addToSet:"$p.value"},i:{$addToSet:"$p.value"}}},
+{$group:{_id:{k:"$p.k",t:"$p.t"},count:{$sum:1},p:{$addToSet:"$p.v"},i:{$addToSet:"$p.v"}}},
 {$addFields:{
-     p:{$cond:[{$ne:["object","$_id.type"]},"$$REMOVE", merge("$p","properties") ]},
+     p:{$cond:[{$ne:["object","$_id.t"]},"$$REMOVE", merge("$p","properties") ]},
      i:{$cond:[{$ne:["array","$_id.type"]},"$$REMOVE", merge("$i","items") ]}
 }},
 /* handle properties */
 unwindKeep("$p"), groupPK("$p"), 
-{$group:{_id:"$_id.i", count:{$first:"$count"}, i:{$addToSet:"$i"}, p:{$push:{key:"$_id.pk","type":typea("$pt")}}}},
+{$group:{_id:"$_id.i", count:{$first:"$count"}, i:{$addToSet:"$i"}, p:{$push:{k:"$_id.pk","t":typea("$pt")}}}},
 {$addFields:{
-     p:{$cond:[{$ne:["object","$_id.type"]},"$$REMOVE", "$p" ]},
-     i:{$cond:[{$ne:["array","$_id.type"]},"$$REMOVE", concatPrefix("$i")]}
+     p:{$cond:[{$ne:["object","$_id.t"]},"$$REMOVE", "$p" ]},
+     i:{$cond:[{$ne:["array","$_id.t"]},"$$REMOVE", concatPrefix("$i")]}
 }},
 /* handle items */
 {$group:{
-	_id:"$_id.key", 
-	types: {$push:{t:"$_id.type",c:"$count"}}, 
+	_id:"$_id.k", 
+	types: {$push:{t:"$_id.t",c:"$count"}}, 
 	total:{$sum:"$count"}, 
-	items:{$addToSet:{$cond:[{$eq:["$_id.type","array"]},"$i",null]}},
-	properties:{$addToSet:{$cond:[{$eq:["$_id.type","object"]},"$p",null]}}
+	items:{$addToSet:{$cond:[{$eq:["$_id.t","array"]},"$i",null]}},
+	properties:{$addToSet:{$cond:[{$eq:["$_id.t","object"]},"$p",null]}}
 }},
 {$project:{_id:0, 
 	k:"$_id",
@@ -178,12 +179,12 @@ unwindKeep("$p"), groupPK("$p"),
 	"v.minLength":{$cond:[{in:["string","$types.t"]},{$min:"$vals"},"$$REMOVE"]},
 	vals:{$addToSet:"$v"}
 */
-mapVal = function(o) { return {"$let":{"vars":{"o":o}, "in": {"key":"$$o.key", "type":"$$o.type", "value":{"$switch": 
+mapVal = function(o) { return {"$let":{"vars":{"o":o}, "in": {"k":"$$o.k", "t":"$$o.t", "v":{"$switch": 
 { "branches":[ 
-    {"case":{$eq:["$$o.type","string"]} , "then": {$strLenCP:"$$o.value"} },
-    {"case":{$eq:["$$o.type","objectId"]} , "then": "objectId" },
-    {"case":{$eq:["$$o.type","array"]} , "then": {$size:"$$o.value"} }
-], "default":"$$o.value"}} }}} 
+    {"case":{$eq:["$$o.t","string"]} , "then": {$strLenCP:"$$o.v"} },
+    {"case":{$eq:["$$o.t","objectId"]} , "then": "objectId" },
+    {"case":{$eq:["$$o.t","array"]} , "then": {$size:"$$o.v"} }
+], "default":"$$o.v"}} }}} 
 };
 
 tot=db.sample1.count();
@@ -191,36 +192,36 @@ tot=db.sample1.count();
 db.foo.aggregate([
 {$project:{p:getktvs({$objectToArray:"$$ROOT"})}},
 {$unwind:"$p"},
-{$group: { _id: { key: "$p.key", type: "$p.type"}, count: { $sum: 1.0 } } }, 
+{$group: { _id: { k: "$p.k", t: "$p.t"}, count: { $sum: 1.0 } } }, 
 { $group: {
-	_id: "$_id.key", 
+	_id: "$_id.k", 
 	count: { $sum: "$count" }, 
-	type: { $push: { type: "$_id.type", c: "$count" } } 
+	t: { $push: { t: "$_id.t", c: "$count" } } 
 }}, 
-{$addFields:{numTypes:{$size:"$type"}}},
+{$addFields:{numTypes:{$size:"$t"}}},
 {$project:{_id:0, count:1, 
-     k:"$_id", 
-     "v.description":{$concat:["The ","$_id"," field"]},
-     "v.type":{$cond:[{$eq:["$numTypes",1]},{$arrayElemAt:["$type.type",0]},"$type.type"]}
+     p:{"k":"$_id", 
+        "v":{"description":{$concat:["The ","$_id"," field"]},
+             "type":{$cond:[{$eq:["$numTypes",1]},{$arrayElemAt:["$t.t",0]},"$t.t"]}}}
 }},
-{$group:{_id:0, p:{$push:"$$ROOT"},count:{$sum:"$count"},required:{$push:{$cond:[{$eq:["$count",3]},"$_id","$$REMOVE"]}}}},
+{$group:{_id:0, p:{$push:"$p"},count:{$sum:"$count"},required:{$push:{$cond:[{$eq:["$count",3]},"$_id","$$REMOVE"]}}}},
 {$project:{_id:0, _$schema:"json-schema/blah-blah",title:"sample1",type:"object",properties:{$arrayToObject:"$p"}}}
 ]).pretty()
 
 db.foo.aggregate([
 {$project:{p:getktvs({$objectToArray:"$$ROOT"})}}, 
 {$unwind:"$p"}, 
-{$group: { _id: { key: "$p.key", type: "$p.type"}, count: { $sum: 1.0 } } }, 
+{$group: { _id: { k: "$p.k", type: "$p.t"}, count: { $sum: 1.0 } } }, 
 { $group: {
-         _id: "$_id.key",
+         _id: "$_id.k",
          count: { $sum: "$count" },
-         type: { $push: { type: "$_id.type", c: "$count" } } 
+         t: { $push: { t: "$_id.t", c: "$count" } } 
 }}, 
-{$addFields:{numTypes:{$size:"$type"}}}, 
+{$addFields:{numTypes:{$size:"$t"}}}, 
 {$project:{ _id:0, count:1,
       k:"$_id",
       "v.description":{$concat:["The ","$_id"," field"]},
-      "v.type":{$cond:[{$eq:["$numTypes",1]},{$arrayElemAt:["$type.type",0]},"$type.type"]} 
+      "v.type":{$cond:[{$eq:["$numTypes",1]},{$arrayElemAt:["$t.t",0]},"$t.t"]} 
 }}, 
 {$group:{_id:0, p:{$push:{k:"$k",v:"$v"}},count:{$sum:"$count"},r:{$push:{$cond:[{$eq:["$count",3]},"$k",null]}}}}, 
 {$project:{_id:0, 
@@ -239,8 +240,8 @@ db.sample1.aggregate(
    {$project:{p:getktvs({$objectToArray:"$$ROOT"})}},
 /* {$group:{_id:0, p:{$push:"$p"}}}, */
    {$project:{p:{$reduce:{input:"$p",initialValue:[], in:{$concatArrays:["$$value","$$this"]}}}}}, 
-   {$addFields:{keys:{$setUnion:["$p.key"]}}}, 
-   {$project:{p:{$map:{input:"$keys",as:"k", in:{k:"$$k",t:{$map:{input:{$filter:{input:"$p",cond:{$eq:["$$this.key","$$k"]}}},in:"$$this.type"}}}}}}} 
+   {$addFields:{keys:{$setUnion:["$p.k"]}}}, 
+   {$project:{p:{$map:{input:"$keys",as:"k", in:{k:"$$k",t:{$map:{input:{$filter:{input:"$p",cond:{$eq:["$$this.k","$$k"]}}},in:"$$this.t"}}}}}}} 
 ]
  ).pretty()
 
@@ -257,15 +258,15 @@ db.sample1.aggregate([
 mapDoc = function(o, i) { if (i>3) return o; i=i+1; return {"$map":{
                         "input":o, 
                         "as":"o", 
-                        "in": {"key":"$$o.key", "type":"$$o.type", "value":{"$switch": 
+                        "in": {"k":"$$o.k", "t":"$$o.t", "v":{"$switch": 
 { "branches":[ 
-    {"case":{$eq:["$$o.type","string"]} , "then": {$strLenCP:"$$o.value"} },
-    {"case":{$eq:["$$o.type","objectId"]} , "then": "$$REMOVE" },
-    {"case":{$eq:["$$o.type","array"]} , "then": mapArray("$$o.value", i) },
-    {"case":{$eq:["$$o.type","string"]} , "then": {$strLenCP:"$$o.value"} },
-  {"case":{$in:["$$o.type",["timestamp","bool","date"]]}, "then": "$$o.value" },
-  {"case":{$eq:["$$o.type","object"]}, "then": {"$objectToArray":"$$o.value" } }
-], "default":"$$o.value"}}
+    {"case":{$eq:["$$o.t","string"]} , "then": {$strLenCP:"$$o.v"} },
+    {"case":{$eq:["$$o.t","objectId"]} , "then": "$$REMOVE" },
+    {"case":{$eq:["$$o.t","array"]} , "then": mapArray("$$o.v", i) },
+    {"case":{$eq:["$$o.t","string"]} , "then": {$strLenCP:"$$o.v"} },
+  {"case":{$in:["$$o.t",["timestamp","bool","date"]]}, "then": "$$o.v" },
+  {"case":{$eq:["$$o.t","object"]}, "then": {"$objectToArray":"$$o.v" } }
+], "default":"$$o.v"}}
 }}}
 } 
 
@@ -274,7 +275,8 @@ mapObject = function(o, i) {
    if (i<=0) return {};
    i=i-1;
    return {$map:{
-      input: {$objectToArray:obj}, 
+      input: {$objectToArray:o}, 
+      in:{prefix+"$$this"}
    }}}
 
 mapHold={$map: {
