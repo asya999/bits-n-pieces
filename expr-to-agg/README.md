@@ -32,3 +32,39 @@ Basic Usage
     > expressionToString(aggToTokens(a1),false)
     ((2 * "x") + 1)
 
+    > formula="100*(50 - min(10, (length('$str1')-length('$str2'))))";
+    > var expr = parser.parse(fomula);
+    > expr.toAgg()
+    {
+        "$multiply" : [
+            100,
+            {
+                "$subtract" : [
+                    50,
+                    {
+                        "$min" : [
+                            10,
+                            {
+                                "$subtract" : [
+                                    {
+                                        "$strLenCP" : [
+                                            "$str1"
+                                        ]
+                                    },
+                                    {
+                                        "$strLenCP" : [
+                                            "$str2"
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    }
+    // and back
+    > expressionToString(aggToTokens(e.toAgg()),false)
+    (100 * (50 - min(10, ((length "$str1") - (length "$str2")))))
+
