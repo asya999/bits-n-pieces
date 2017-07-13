@@ -232,6 +232,7 @@ wts = function (dbname, options) {
    debug = false;
    verbose = 0;
    detailsNS = "";
+   collLimit = 50;
    nummoves = 20;
    withdate = false;
    grain = null;
@@ -321,6 +322,7 @@ wts = function (dbname, options) {
    var droppednss = colls.find({dropped:true}).sort({_id:1}).toArray();
    var someHashed = false;
    print("\nSharded collections and their keys are:");
+   var nss = colls.find({dropped:false}).sort({_id:1}).limit(collLimit).toArray();
    nss.forEach(function(c) { 
       var addl="";
       if (verbose > 0) {
@@ -374,25 +376,76 @@ wts = function (dbname, options) {
           var ct = tags.distinct("ns");
           var nt = tags.distinct("tag");
           print("\t" + ct.length + " collection" + (ct.length>1 ? "s are":" is") + " using " + nt.length + " tags.");
+          if (verbose>1) {
+              /* ranges */
+              ct.forEach(function(c) {
+                  // print("\t\t Collection " + c + " tag details:");
+                  var cnt = tags.distinct("tag", { ns: c } );
+                  // print("\t\t\t using " + cnt.length + " tags: " + tojsononeline(cnt));
+                  var tshards = chunks.distinct("shard", { ns:c});
+                  tshards.forEach(function(s) {
+                       var thsh=shards.findOne({_id:s});
+                       var thtags = thsh.tags;
+                      // chunks.find({ns:c, shard:s}).sort({
+                       // print("\t\t\t\t  Shard " + s + " tagged " + tojsononeline(thtags) + " has " + chunks.count({ns:c, shard:s}) + " chunks.");
+                  });
+                  shards.aggregate({$unwind:"$tags"},{$group:{_id:"$tags", shards:{$addToSet:"$_id"}}}).forEach(function(tws) {
+                       ; // print("\t\t\t\t  Tag " + tws._id + " belongs to shards " + tojsononeline(tws.shards));
+                  });
+
+                  if (verbose>3) {
+                      tags.aggregate({$match:{ns:c}},{$sort:{ns:1,"min":1}},{$group:{_id:"$tag", chunks:{$push:{min:"$min", max:"$max"}}}}).forEach(function(tg) {
+
+                         var shardsWthisTag = shards.find({tags:tg._id},{_id:1}).toArray();
+                         var sWithT = shardsWthisTag.map(function(a) {return a._id;});
+                         // print("DEBUG:  Tag range details for tag " + tg._id + "(represented by shards " + tojson(sWithT) + "): " + tojsononeline(tg.chunks));
+
+                         var prevmax = tg.chunks[0].min;
+                         errlimit = 0;
+                         tg.chunks.forEach(function(tchunk) {
+                             if (tojson(tchunk.min) != tojson(prevmax)) { 
+                                 if (errlimit < 5) print ( "\t\tERROR:   "+c+" tag ranges not contiguous: range max " + tojson(prevmax) + " and range min " + tojson(tchunk.min) + " allow a gap!" );
+                                 errlimit = errlimit+1;
+                             }
+                             prevmax = tchunk.max;
+                         });
+                         if (errlimit > 4) print("\t\t\t plus " + (errlimit-5) + " more tag range boundaries don't align.");
+                         var wrongCount = chunks.count({ns:c, shard:{$nin:sWithT}});
+                         if (wrongCount > 0 ) print ("\t\tERROR: " + wrongCount + " chunks may be on the wrong shard(s) in collection " + c);
+                      });
+                  }
+              });
+          }
       }
    }
 
    /* ****  Chunk Distribution  ****  */
    print("\nChunk distribution:");
    c = chunks.aggregate({$group:{_id:{ns: "$ns",shard:"$shard"}, c:{"$sum":1}}},
-                        {$sort:{"_id":1}},
+                        {$sort:{"_id":1}}, {$limit: collLimit},
                         {$project:{ns:"$_id.ns", shard:"$_id.shard", count:"$c", _id:0}}
    );
    ch = unagg(c);
    coll = "";
    ch.forEach(function(nsh) { 
        if ( nsh.ns != coll ) {
-            print( "\t " + nsh.ns + ":");
-            coll = nsh.ns;
+           coll = nsh.ns;
+           /* tag details for tagged collections*/
+           ifTagged="";
+           if ( ct.indexOf(coll) > -1) {
+              isTagged=" (tagged)";
+           }
+           print( "\t " + nsh.ns + isTagged + ":");
        }
        print( "\t\t " + nsh.shard + ":  \t " + nsh.count);
+
+       if (isTagged!="") {
+           
+       }
    });
    print("\tTotal chunks: " + chunks.count());
+
+   return; /*temp*/
 
    /* ****  Chunk Size  ****  */
    var ch = sets.findOne({_id:"chunksize"});
@@ -578,7 +631,7 @@ wts = function (dbname, options) {
       isLast = "";
       current = chunks.find({ns:NS},{shard:1}).sort({min:1}).limit(1).toArray()[0].shard;
       maxs = chunks.find({ns:NS},{shard:1}).sort({min:-1}).limit(1).toArray()[0]._id;
-      chunks.find({ns:NS},{shard:1}).sort({_id:1}).forEach(function(c) {
+      chunks.find({ns:NS},{shard:1}).sort({ns:1,min:1}).forEach(function(c) {
           if (maxs == c._id) isLast=" <--max chunk here";
           if (c.shard==current) {
              count++;   
@@ -604,4 +657,3 @@ wts = function (dbname, options) {
       if (grandTotal > 0) print("\t\t" + grandTotal + " sequences of chunks greater than " + seqThreshold);
    } );
 }
-
