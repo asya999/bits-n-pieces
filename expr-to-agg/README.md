@@ -68,3 +68,29 @@ Basic Usage
     > expressionToString(aggToTokens(e.toAgg()),false)
     (100 * (50 - min(10, ((length "$str1") - (length "$str2")))))
 
+    > var f = "'$field1' + '$field2' * (90 - '$field3')";
+    > var e = new Parser.parse(f);
+    > e.toString();
+    ("$field1" + ("$field2" * (90 - "$field3")))
+    > a = e.toAgg();
+    {
+	    "$add" : [
+		    "$field1",
+		    {
+			    "$multiply" : [
+				    "$field2",
+				    {
+					    "$subtract" : [
+						    90,
+						    "$field3"
+					    ]
+				    }
+			    ]
+		    }
+	    ]
+    }
+    > var e2=new Expression(aggToTokens(a1),new Parser())
+    > e2.toString()
+    ("$field1" + ("$field2" * (90 - "$field3")))
+
+
