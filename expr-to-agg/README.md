@@ -18,7 +18,8 @@ In mongo shell:
 
     > load('parser.js')
 
-Or 
+Or start shell with parser loaded:
+
     mongo parser.js --shell
 
 Basic Usage
