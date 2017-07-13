@@ -25,16 +25,16 @@ Or start shell with parser loaded:
 Basic Usage
 -------------------------------------
 
-    > var parser = new Parser();
-    > var expr = parser.parse('2 * x + 1');
-    > agg1=expr.toAgg()
+    > let parser = new Parser();
+    > let expr = parser.parse('2 * x + 1');
+    > let agg1=expr.toAgg()
     > agg1
     { "$add" : [ { "$multiply" : [ 2, "x" ] }, 1 ] }
     > expressionToString(aggToTokens(a1),false)
     ((2 * "x") + 1)
 
-    > formula="100*(50 - min(10, (length('$str1')-length('$str2'))))";
-    > var expr = parser.parse(fomula);
+    > let formula="100*(50 - min(10, (length('$str1')-length('$str2'))))";
+    > let expr = parser.parse(fomula);
     > expr.toAgg()
     {
         "$multiply" : [
@@ -69,8 +69,8 @@ Basic Usage
     > expressionToString(aggToTokens(e.toAgg()),false)
     (100 * (50 - min(10, ((length "$str1") - (length "$str2")))))
 
-    > var f = "'$field1' + '$field2' * (90 - '$field3')";
-    > var e = new Parser.parse(f);
+    > let f = "'$field1' + '$field2' * (90 - '$field3')";
+    > let e = new Parser.parse(f);
     > e.toString();
     ("$field1" + ("$field2" * (90 - "$field3")))
     > a = e.toAgg();
@@ -90,7 +90,7 @@ Basic Usage
 		    }
 	    ]
     }
-    > var e2=new Expression(aggToTokens(a1),new Parser())
+    > let e2=new Expression(aggToTokens(a1),new Parser())
     > e2.toString()
     ("$field1" + ("$field2" * (90 - "$field3")))
 
