@@ -296,7 +296,7 @@ wts = function (dbname, options) {
          if ( s.host.indexOf("/") > 0 ) reps += 1;
          if ( s.hasOwnProperty("tags") && s.tags.length > 0 ) tagged += 1;
          if ( s.hasOwnProperty("draining") && s.draining ) print("\tShard " + s._id + " is draining");
-         getShardServerDetails(new Mongo(s.host), s.host);
+         /* getShardServerDetails(new Mongo(s.host), s.host); */
    });
    print("\t" + reps + " out of " + shs + " shards are replica sets");
    if ( tagged > 0 ) print("\t" + (tagged==shs ? "all" : tagged + " of " + shs) + " shards have tags set");
@@ -493,7 +493,8 @@ wts = function (dbname, options) {
    res = unagg(z);
    /* for each namespace */
    res.forEach(function(c) { 
-      print("\n" + c._id + ": \t" + (c.splits ? c.splits : "NO") + " splits; \t" 
+        if (verbose>0 || c.splits || c.mingrations || c.migrationAttemps || c.migrationFailures)
+          print("\n" + c._id + ": \t" + (c.splits ? c.splits : "NO") + " splits; \t" 
                       + (c.migrations ? c.migrations : "NO" ) + " successful migrations out of " 
                       + (c.migrationAttempts ? c.migrationAttempts : "NO" ) +  " attempts.  " 
                       + (c.migrationFailures ? c.migrationFailures : "NONE" ) + " failed.");
