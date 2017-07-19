@@ -80,8 +80,8 @@ db.qradar.aggregate([
 
 db.qradar.aggregate([
     {$match:{dt:{$gte:ISODate("2017-05-08T04:00:00Z"),$lt:ISODate("2017-05-08T08:00:00Z")}}}, 
-    {$sort:{username:1, dt:1}}, 
-    {$group:{_id:"$username", ips:{$push:{ip:"$sourceaddress", dt:"$dt",str:{$substr:["$Time",11,5]}}}}},
+    {$sort:{user:1, dt:1}}, 
+    {$group:{_id:"$user", ips:{$push:{ip:"$ipaddr", dt:"$dt"}}}},
     {$addFields:{diffIpNum:{$size:{$setUnion:"$ips.ip"}}}},
     {$match:{diffIpNum:{$gt:1}}},
     {$addFields:{diffs: {$filter:{
@@ -100,5 +100,87 @@ db.qradar.aggregate([
     }}}},
     {$match:{"diffs":{$lt: 10}}}, 
     {$project:{_id:0, username:"$_id"}},
+]).pretty()
+
+db.logins.aggregate([
+    {$match:{dt:{$gte:ISODate("2017-05-08T04:00:00Z"),$lt:ISODate("2017-05-08T08:00:00Z")}}}, 
+    {$sort:{user:1, dt:1}}, 
+    {$group:{_id:"$user", ips:{$push:{ip:"$ipaddr", dt:"$dt"}}}},
+    {$addFields:{diffIpNum:{$size:{$setUnion:"$ips.ip"}}}},
+    {$match:{diffIpNum:{$gt:1}}},
+    {$addFields:{diffs: {$filter:{
+        input:{$map:{
+            input: {$range:[0,{$subtract:[{$size:"$ips"},1]}]},
+            as:"i", 
+            in: {$let:{
+                vars:{ ip1:{$arrayElemAt:["$ips","$$i"]},
+                       ip2:{$arrayElemAt:["$ips",{$add:["$$i",1]}]}
+                },
+                in: {$cond:[ {$ne:["$$ip1.ip","$$ip2.ip"]}, {$divide:[{$abs:{$subtract:["$$ip1.dt","$$ip2.dt"]}},60000]}, 999999]}
+            }} 
+        }},
+        as:"m", 
+        cond:{$lt:["$$m",10]}
+    }}}},
+    {$match:{"diffs":{$lt: 10}}}, 
+    {$project:{_id:0, username:"$_id"}},
+]).pretty()
+
+db.logins.aggregate([
+    {$match:{dt:{$gte:ISODate("2017-05-08T04:00:00Z"),$lt:ISODate("2017-05-08T08:00:00Z")}}}, 
+    {$sort:{user:1, dt:1}}, 
+    {$group:{_id:"$user", ips:{$push:{ip:"$ipaddr", dt:"$dt"}}}},
+    {$addFields:{diffIpNum:{$size:{$setUnion:"$ips.ip"}}}},
+    {$match:{diffIpNum:{$gt:1}}},
+    {$addFields:{diffs: {$filter:{
+        input:{$map:{
+            input: {$range:[0,{$subtract:[{$size:"$ips"},1]}]},
+            as:"i", 
+            in: {$let:{
+                vars:{ ip1:{$arrayElemAt:["$ips","$$i"]},
+                       ip2:{$arrayElemAt:["$ips",{$add:["$$i",1]}]}
+                },
+                in: {diff:{$cond:[ {$ne:["$$ip1.ip","$$ip2.ip"]}, {$divide:[{$abs:{$subtract:["$$ip1.dt","$$ip2.dt"]}},60000]}, 999999]},
+                     ip1:"$$ip1.ip",
+                     time1:"$$ip1.str",
+                     ip2:"$$ip2.ip",
+                     time2:"$$ip2.str"}
+            }} 
+        }},
+        cond:{$lt:["$$this.diff",10]}
+    }}}},
+    {$match:{"diffs":{$ne: []}}}, 
+    {$project:{_id:0, user:"$_id", suspectLogins:"$diffs"}},
+]).pretty()
+
+arrayOfIndexes = function(arr) {
+   return {$range:[0,{$subtract:[{$size:arr},1]}]};
+}
+
+db.logins.aggregate([
+    {$match:{ts:{$gte:ISODate("2017-05-08T04:00:00Z"),$lt:ISODate("2017-05-08T08:00:00Z")}}}, 
+    {$sort:{user:1, ts:1}}, 
+    {$group:{_id:"$user", ips:{$push:{ip:"$ipaddr", ts:"$ts"}}}},
+    {$addFields:{diffIpNum:{$size:{$setUnion:"$ips.ip"}}}},
+    {$match:{diffIpNum:{$gt:1}}},
+    {$addFields:{diffs: {$filter:{
+        input:{$map:{
+            input: {$range:[0,{$subtract:[{$size:"$ips"},1]}]},
+            as:"i", 
+            in: {$let:{
+                vars:{ ip1:{$arrayElemAt:["$ips","$$i"]},
+                       ip2:{$arrayElemAt:["$ips",{$add:["$$i",1]}]}
+                },
+                in: {diff:{$divide:[{$abs:{$subtract:["$$ip1.ts","$$ip2.ts"]}},60000]},
+                     ip1:"$$ip1.ip",
+                     time1:"$$ip1.str",
+                     ip2:"$$ip2.ip",
+                     time2:"$$ip2.str"}
+            }} 
+        }},
+        cond:{$and:[{$lt:["$$this.diff",10]},{$ne:["$$this.ip1","$$this.ip2"]}]}
+    }}}},
+    {$match:{"diffs":{$ne: []}}}, 
+    {$project:{_id:0, user:"$_id", suspectLogins:"$diffs"}},
 ]).pretty()
 
