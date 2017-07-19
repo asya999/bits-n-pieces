@@ -1,3 +1,5 @@
+convertToDec = function(foo) { return {"$add":[foo,NumberDecimal(0)]}; }
+
 conf={ _id:"asya", "members" : [
 		{
 			"_id" : 0,
@@ -76,10 +78,11 @@ findcoll = function (str) {
 prompt = function() {
     var state = "local";
     var version = db.version();
-    var host = hostname();
+    var getMongo = db.getMongo();
     var replPrompt = defaultPrompt();
     if (db.version() < '2.5.5') replPrompt = replSetMemberStatePrompt();
-    port=db.getMongo().toString().split(':')[1];
+    host=getMongo.host.split(':')[0];
+    port=getMongo.host.split(':')[1];
     if (port == undefined) port="27017";
     if (replPrompt == "> ") {
         if (host.slice(-5) == "local") {

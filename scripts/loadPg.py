@@ -23,6 +23,10 @@ deletekeys=[]
 cur = psycopg2.extras.RealDictCursor(pgconn)
 cur.execute(query)
 
+# rowcount=cur.rowcount()
+# if rowcount is bigger than some number can loop
+# using fetchmany rather than fetchall
+
 rows = cur.fetchall()    
 for line in rows:
    for k,v in line.items():
