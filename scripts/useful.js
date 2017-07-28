@@ -141,3 +141,11 @@ printOneAll = function () {
              printjson(mydb.getCollection(z).findOne());
        });  
 }
+
+load("/Users/asya/github/bits-n-pieces/scripts/sortArray.js");
+load("/Users/asya/github/bits-n-pieces/scripts/rankArray.js");
+load("/Users/asya/github/bits-n-pieces/scripts/reduceArrayObjects.js");
+load("/Users/asya/github/bits-n-pieces/scripts/concatArrays.js");
+load("/Users/asya/github/bits-n-pieces/scripts/outputKeys.js");
+load("/Users/asya/github/bits-n-pieces/scripts/setUnionArrays.js");
+load("/Users/asya/github/bits-n-pieces/scripts/getField.js");
