@@ -1,5 +1,5 @@
 compareFields = function (o1, o2, f1, f2) {
-  return {$and:[ {$eq:[ o1+'.'+f1, o2+'.'+f1 ]}, {$eq:[ o1+'.'+f2, o2+'.'+f2 ]} ]};
+  return {$eq:[[ o1+'.'+f1, o1+'.'+f2 ], [ o2+'.'+f1, o2+'.'+f2 ]]};
 }
 
 mergeObj = function ( o1, o2) {
