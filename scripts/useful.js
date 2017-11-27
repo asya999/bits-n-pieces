@@ -142,6 +142,16 @@ printOneAll = function () {
        });  
 }
 
+findValidators = function () {
+    var dbs=[];     
+    db.getMongo().getDBs().databases.forEach(function(d) {
+        db.getSiblingDB(d.name).getCollectionInfos({"options.validator":{$exists:true}}).forEach(function(co) {
+            print(d.name + "." + co.name);
+            print(tojson(co.options.validator));
+        });    
+    }); 
+}
+
 load("/Users/asya/github/bits-n-pieces/scripts/sortArray.js");
 load("/Users/asya/github/bits-n-pieces/scripts/rankArray.js");
 load("/Users/asya/github/bits-n-pieces/scripts/reduceArrayObjects.js");
