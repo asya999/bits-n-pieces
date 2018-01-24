@@ -276,7 +276,7 @@ mapObject = function(o, i) {
    i=i-1;
    return {$map:{
       input: {$objectToArray:o}, 
-      in:{prefix+"$$this"}
+      in:{prefix:"$$this"}
    }}}
 
 mapHold={$map: {
