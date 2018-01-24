@@ -21,7 +21,7 @@ makeBuckets = function (field, array) {
      return con[0];
 }
 
-isNumber = function (field) {
+isNum = function (field) {
      var minv = NumberLong("-9223372036854775807");
      var maxv = NumberLong("9223372036854775807");
      return { "$cond" : { "if" : { $and: [ {$gte: [ field, minv ] }, {$lte: [ field, maxv]   }   ]  },
