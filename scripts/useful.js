@@ -159,3 +159,4 @@ load("/Users/asya/github/bits-n-pieces/scripts/concatArrays.js");
 load("/Users/asya/github/bits-n-pieces/scripts/outputKeys.js");
 load("/Users/asya/github/bits-n-pieces/scripts/setUnionArrays.js");
 load("/Users/asya/github/bits-n-pieces/scripts/getField.js");
+load("/Users/asya/github/bits-n-pieces/scripts/string2num.js");
