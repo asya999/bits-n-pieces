@@ -129,6 +129,19 @@ StopWatch.prototype.stop = function() {
     this.elapsedMilliseconds = new Date().getTime() - this.startMilliseconds;
 }
 
+printSizes = function () {
+    if (arguments.length > 0) {
+            print("printCollectionStats() has no optional arguments");
+            return;
+        }
+    print("Collection \t\t   Count  \t\t     avgObjectSize   \t   Total size in  MBs ");
+    var mydb = db;
+    db.getCollectionNames().forEach(function(z) {
+              if (z.lastIndexOf("system.",0)===0) return;
+              print(z + Array((40-z.length)).join(' ') +" \t " + mydb.getCollection(z).count() + "   \t   \t " + mydb.getCollection(z).stats().avgObjSize + " \t " + mydb.getCollection(z).stats(1024*1024).size);
+     }); 
+}
+
 printOneAll = function () {     
        if (arguments.length > 0) {
            print("printCollectionStats() has no optional arguments");
@@ -138,7 +151,7 @@ printOneAll = function () {
        db.getCollectionNames().forEach(function(z) {
              if (z.lastIndexOf("system.",0)===0) return;
              print(z + Array((40-z.length)).join(' ') +" \t " + mydb.getCollection(z).count());
-             printjson(mydb.getCollection(z).findOne());
+             if (Object.bsonsize(mydb.getCollection(z).findOne()) < 1000) printjson(mydb.getCollection(z).findOne());
        });  
 }
 
@@ -151,6 +164,83 @@ findValidators = function () {
         });    
     }); 
 }
+
+makeCents = function(input) {
+    return {$let:{
+        vars: {
+            dc:{$split:[{$toString:{$add:[input,NumberDecimal(".00")]}},"."]}},
+        in: {
+            $concat:[
+                {$arrayElemAt:["$$dc",0]},
+                ".",
+                {$substr:[{$arrayElemAt:["$$dc",1]},0,2]}
+            ]
+        }
+    }};
+}
+
+printDBSizes = function (str) {
+  var dbs=[];
+  db.getMongo().getDBs().databases.forEach(function(d) {
+    if (d.name.indexOf(str) != -1) {
+        printjson(db.getSiblingDB(d.name).stats(1024*1024*1024));
+    }
+ });
+}
+
+var runPing = function(iterations) {
+    var start = Date.now();
+    for (i = 0; i < iterations; i++) {
+        res = db.runCommand({"ping": 1});
+    }
+    var end = Date.now();
+    return end-start;
+};
+
+var runQuery = function(coll, query, iterations=1) {
+    var start = Date.now();
+    for (i = 0; i < iterations; i++) {
+        res = db.getCollection(coll).find(query).toArray();
+    }
+    var end = Date.now();
+    return end-start;
+};
+
+var getFieldFrom = function (f, o="$$ROOT") {
+    return {$arrayElemAt:[ 
+              {$map:{
+                   input:{$filter:{
+                           input:{$objectToArray:o},
+                           cond:{$eq:["$$this.k", f]}
+                   }},
+                in:"$$this.v"
+              }},
+              0
+    ]};
+};
+
+var getKeys = function (obj) {
+   return {$map:{input:{$objectToArray:obj}, in: "$$this.k"}}; 
+};
+
+/* assuming identical fields in objects and all are numeric */
+var mergeAddObjects = function ( obj1, obj2 ) {
+    return {$arrayToObject:{$map:{
+          input: getKeys(obj1),
+          as: k,
+          in: {
+             k : "$$k",
+             v : {$add: [ 
+                getFieldFrom("$$k", obj1),
+                getFieldFrom("$$k", obj2)
+             ]}
+          }
+    }}};
+};
+
+var stripZeros = function(obj) {
+    return {$arrayToObject:{$filter:{input:{$objectToArray:obj}, cond:{$ne:["$$this.v",0]}}}}
+};
 
 load("/Users/asya/github/bits-n-pieces/scripts/sortArray.js");
 load("/Users/asya/github/bits-n-pieces/scripts/rankArray.js");
