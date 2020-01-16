@@ -242,6 +242,17 @@ var stripZeros = function(obj) {
     return {$arrayToObject:{$filter:{input:{$objectToArray:obj}, cond:{$ne:["$$this.v",0]}}}}
 };
 
+var unorderedEq = function(o1, o2) {
+    return {$eq: [
+       {$arrayToObject:{$setUnion:[{$objectToArray:o1}]}},
+       {$arrayToObject:{$setUnion:[{$objectToArray:o2}]}}
+    ] };
+};
+
+var normalize = function(o) {
+    return {"$arrayToObject" : {"$setUnion" : [ {"$objectToArray" : o}]}}
+}
+
 load("/Users/asya/github/bits-n-pieces/scripts/sortArray.js");
 load("/Users/asya/github/bits-n-pieces/scripts/rankArray.js");
 load("/Users/asya/github/bits-n-pieces/scripts/reduceArrayObjects.js");
