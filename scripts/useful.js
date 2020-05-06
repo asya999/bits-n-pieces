@@ -261,5 +261,8 @@ var add2obj=function(o1, o2) {
    return {$arrayToObject:{$map:{input: getKeys(o1), as:"key", in: { k: "$$key", v: {$add:[{$ifNull:[getField(o1, "$$key"),0]}, {$ifNull:[getField(o2, "$$key"),0]}]}}}}}; 
 };
 
+subtract2numbers = function(a) { 
+   return {$subtract:[{$arrayElemAt:[a,0]},{$arrayElemAt:[a,1]}]}
+}
 var to=new Date().getTime();
-var from=to-1000*60*60*24;
+var from=to-1000*60*60*48;
