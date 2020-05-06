@@ -253,11 +253,13 @@ var normalize = function(o) {
     return {"$arrayToObject" : {"$setUnion" : [ {"$objectToArray" : o}]}}
 }
 
-load("/Users/asya/github/bits-n-pieces/scripts/sortArray.js");
-load("/Users/asya/github/bits-n-pieces/scripts/rankArray.js");
-load("/Users/asya/github/bits-n-pieces/scripts/reduceArrayObjects.js");
-load("/Users/asya/github/bits-n-pieces/scripts/concatArrays.js");
-load("/Users/asya/github/bits-n-pieces/scripts/outputKeys.js");
-load("/Users/asya/github/bits-n-pieces/scripts/setUnionArrays.js");
-load("/Users/asya/github/bits-n-pieces/scripts/getField.js");
-load("/Users/asya/github/bits-n-pieces/scripts/string2num.js");
+var diff2obj=function(o1, o2) { 
+    return {$arrayToObject:{$map:{input:getKeys(o1), as:"key", in: { k: "$$key", v: {$subtract:[{$ifNull:[getField(o1, "$$key"),0]}, {$ifNull:[getField(o2, "$$key"),0]}]}}}}}; 
+};
+
+var add2obj=function(o1, o2) { 
+   return {$arrayToObject:{$map:{input: getKeys(o1), as:"key", in: { k: "$$key", v: {$add:[{$ifNull:[getField(o1, "$$key"),0]}, {$ifNull:[getField(o2, "$$key"),0]}]}}}}}; 
+};
+
+var to=new Date().getTime();
+var from=to-1000*60*60*24;
