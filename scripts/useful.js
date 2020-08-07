@@ -238,6 +238,25 @@ var mergeAddObjects = function ( obj1, obj2 ) {
     }}};
 };
 
+/* not assuming identical fields in objects or types */
+var mergeSumObjects = function ( obj1, obj2 ) {
+    return {$arrayToObject:{$map:{
+          input: {$setUnion: [ getKeys(obj1), getKeys(obj2) ]},
+          as: k,
+          in: {
+             k : "$$k",
+             v : {$ifNull:[ 
+                {$sum: [ 
+                    getFieldFrom("$$k", obj1),
+                    getFieldFrom("$$k", obj2)
+                ]}, {$ifNull:[
+                    getFieldFrom("$$k", obj1),
+                    getFieldFrom("$$k", obj2)
+                ]}]}
+          }
+    }}};
+};
+
 var stripZeros = function(obj) {
     return {$arrayToObject:{$filter:{input:{$objectToArray:obj}, cond:{$ne:["$$this.v",0]}}}}
 };
@@ -248,6 +267,10 @@ var unorderedEq = function(o1, o2) {
        {$arrayToObject:{$setUnion:[{$objectToArray:o2}]}}
     ] };
 };
+
+var sumObjectValues=function(o) { 
+    return {$sum:{$map:{input:{$objectToArray:o}, in:"$$this.v"}}}
+}
 
 var normalize = function(o) {
     return {"$arrayToObject" : {"$setUnion" : [ {"$objectToArray" : o}]}}
@@ -266,3 +289,33 @@ subtract2numbers = function(a) {
 }
 var to=new Date().getTime();
 var from=to-1000*60*60*48;
+DBQuery.shellBatchSize=100;
+
+addManyObj = function(a) {
+    var allKeys={$reduce:{input:a, initialValue:[],in:{$concatArrays:["$$value",getKeys("$$this")]}}};
+    return {$arrayToObject:{$map:{input: allKeys, as:"key", in: {k: "$$key", v:{$sum:{$map:{input:a, in: getField("$$this","$$key") }}}}}}}; 
+}
+
+remove0fields = function(o) { 
+   return {$arrayToObject:{$filter:{input:{$objectToArray:o}, cond:{$ne:[0, "$$this.v"]}}}}; 
+}
+
+formatNumber=function(n) { 
+   return {$let:{
+      vars:{ 
+         o:{$toString:{$toLong:n}},
+         sz:{$strLenCP:{$toString:{$toLong:n}}},
+         mod:{$add:[1,{$mod:[{$add:[-1,{$strLenCP:{$toString:{$toLong:n}}}]},3]}]}
+      },in:{
+         $reduce:{
+            input:{$range:["$$mod","$$sz",3]},
+            initialValue:{$substr:["$$o", 0, "$$mod"]}, 
+            in:{$concat:["$$value", ",", {$substr:["$$o", "$$this", 3]}]}
+         }
+      }
+   }}
+}
+
+findCurrentOps=function(filter={}) { return(db.adminCommand({aggregate:1, pipeline:[{$currentOp:{}},{$match:filter}],cursor:{}})); }
+
+latestId=function(coll) { return(db.getCollection(coll).aggregate({$sort:{_id:1}},{$limit:1},{$project:{_id:{$convert:{to:"date",input:"$_id",onError:"Not Convertable"}}}}).toArray()[0]["_id"]);  }
