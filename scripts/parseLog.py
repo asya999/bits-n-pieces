@@ -56,18 +56,21 @@ def main():
 def parseLogs(loglines, coll, server, options):
     # parse lines
     lines=[]
+    print len(loglines), " log lines"
     for line in loglines:
         l={}
-        dtstr = line[:19]
+        dtstr = line[:23]
         try:
            # need to adjust for time zone of the logs to match UTC/Zulu time!
            adjhours=0
            if options.timezone: adjhours=int(options.timezone)
            # TZ = hours before or after UTC time, to adjust, add
-           dt = datetime.datetime.strptime(dtstr + ' 2013', '%a %b %d %H:%M:%S %Y') + datetime.timedelta(hours=adjhours)
-        except:
+           # 2017-10-26T16:00:00.002
+           dt = datetime.datetime.strptime(dtstr, '%Y-%m-%dT%H:%M:%S.%f') + datetime.timedelta(hours=adjhours)
+        except Exception, err:
            # this should preserve/reuse the previous dt
-           continue
+           print "exception in adjusthours try", str(err), dtstr
+           sys.exit(1)
         words = line.split()[4:]
         l['server']=server
         l['dt'] = dt
@@ -94,7 +97,7 @@ def parseLogs(loglines, coll, server, options):
                 l['db'] = db
             elif line.find('aggregate') > -1:
                 l['op'] = 'agg'
-                l['details'] = line[19:]
+                l['details'] = line[23:]
             elif line.find('update') > -1:
                 if line.find("findandmodify:") > -1:
                    l['op'] = 'findandmodify'
@@ -109,10 +112,10 @@ def parseLogs(loglines, coll, server, options):
                    l['details'] = line.split()[7:]
             elif line.find('update') > -1:
                 l['op'] = 'update'
-                l['details'] = line[19:]
+                l['details'] = line[23:]
             else:
                 l['op'] = 'other'
-                l['details'] = line[19:]
+                l['details'] = line[23:]
         else:
             # this is a system thread
             threadName = line[ line.find(' [')+2:line.find('] ')]
@@ -121,6 +124,7 @@ def parseLogs(loglines, coll, server, options):
         lines.append(l)
         if len(lines) > 100:
            res=coll.insert(lines)
+           print "Inserting 100 lines into ", repr(coll)
            lines=[]
     
     if len(lines) > 0: res=coll.insert(lines)
